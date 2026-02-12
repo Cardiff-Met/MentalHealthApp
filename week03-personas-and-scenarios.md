@@ -8,7 +8,7 @@
 
 This document presents three user personas and three corresponding usage scenarios for the Personalized Mental Health Support App.
 
-These personas and scenarios help refine product scope, validate the prototype created in Week 2, and prepare for user story development in Weeks 4–5.
+These personas and scenarios refine product scope, validate the prototype created in Week 2, and prepare for user story development in Weeks 4–5.
 
 ---
 
@@ -25,7 +25,7 @@ These personas and scenarios help refine product scope, validate the prototype c
 ### Goals and Motivations
 - Manage stress during busy academic periods
 - Access mental health resources privately
-- Quickly book support sessions when needed
+- Quickly request support sessions when needed
 
 ### Frustrations / Pain Points
 - Long waiting times for counselling
@@ -56,8 +56,8 @@ Success looks like:
 
 ### Goals and Motivations
 - Find local mental health services
-- Book appointments efficiently
-- Understand what services are available
+- Request appointments efficiently
+- Understand what services are available and how booking works
 
 ### Frustrations / Pain Points
 - Confusion about where to go for support
@@ -74,9 +74,9 @@ Comfortable navigating digital systems and online booking platforms.
 - Often multitasking between research and coursework
 
 ### Relationship to the Product
-Daniel would primarily use the booking and service information features.
+Daniel would primarily use the service information + booking request features.
 Success looks like:
-“I can identify the right service and book it in minutes.”
+“I can identify the right service and request an appointment in minutes.”
 
 ---
 
@@ -116,7 +116,7 @@ Success looks like:
 
 ---
 
-## Scenario 1 – Emily (Primary User)
+## Scenario 1 – Emily (Primary User) — Mood logging under pressure
 
 **Starting Situation:**
 Emily has two deadlines next week and feels overwhelmed.
@@ -142,7 +142,7 @@ She receives tailored coping resources and feels reassured.
 
 ---
 
-## Scenario 2 – Daniel (Secondary User)
+## Scenario 2 – Daniel (Secondary User) — Requesting a session with external confirmation
 
 **Starting Situation:**
 Daniel realises he needs professional support after prolonged stress.
@@ -151,24 +151,24 @@ Daniel realises he needs professional support after prolonged stress.
 A friend suggests contacting university counselling.
 
 **Goal:**
-Find and book a therapy session.
+Request an appointment slot and receive confirmation.
 
 **What He Does (High-Level Steps):**
 1. Logs into the app
-2. Navigates to the booking page
-3. Reviews available services
-4. Selects date and time
-5. Confirms booking
+2. Navigates to the booking calendar
+3. Reviews available slots and chooses a suitable time
+4. Submits the booking request
+5. Checks booking status (Pending → Confirmed/Declined)
 
 **Challenge/Constraint:**
-Limited time between academic commitments.
+He has limited time and needs quick clarity; the first chosen slot may not be confirmed.
 
 **Outcome (Success):**
-Receives booking confirmation and appointment details.
+His request is confirmed and he receives appointment details; if declined, he quickly selects another slot.
 
 ---
 
-## Scenario 3 – Aisha (Edge-Case User)
+## Scenario 3 – Aisha (Edge-Case User) — Exploring support privately
 
 **Starting Situation:**
 Aisha feels isolated during her first semester.
@@ -198,7 +198,7 @@ She understands her options and feels confident seeking help.
 
 ---
 
-## Scenario 1 (Emily)
+## Scenario 1 (Emily) — Mood Logging
 
 Supported by:
 - Login Screen
@@ -207,27 +207,28 @@ Supported by:
 - Resources Page
 
 How Screens Help:
-- Mood input allows emotional logging
-- Dashboard shows personalised suggestions
-- Resources page provides actionable guidance
+- Mood input allows emotional logging with minimal friction
+- Dashboard shows personalised suggestions immediately
+- Resources provide actionable coping guidance
 
 ---
 
-## Scenario 2 (Daniel)
+## Scenario 2 (Daniel) — Booking Request + Status
 
 Supported by:
 - Login Screen
-- Booking Page
-- Dashboard
+- Booking Calendar Page (request booking)
+- Booking Status / Confirmation Page
+- Dashboard (booking summary)
 
 How Screens Help:
-- Booking interface provides structured service options
-- Confirmation provides reassurance
-- Dashboard displays upcoming sessions
+- Calendar supports choosing an available slot quickly
+- Status page reduces uncertainty (Pending/Confirmed/Declined)
+- Dashboard provides at-a-glance view of upcoming confirmed sessions
 
 ---
 
-## Scenario 3 (Aisha)
+## Scenario 3 (Aisha) — Private Resource Discovery
 
 Supported by:
 - Registration Screen
@@ -235,17 +236,17 @@ Supported by:
 - Resources Page
 
 How Screens Help:
-- Simple registration ensures accessibility
-- Resources screen provides clear explanations
-- Secure login reassures privacy
+- Simple registration supports accessibility
+- Resources screen can be designed with clear language and privacy reassurance
+- Secure login reduces anxiety about confidentiality
 
 ---
 
 # 5. Insights and Backlog Notes
 
-- Clear, simple language is essential for accessibility
-- Booking confirmation must be highly visible
-- Mood logging should be fast (minimal input friction)
-- Privacy reassurance should be emphasised during registration
+- Booking must provide clear status visibility (Pending vs Confirmed) to reduce anxiety
+- Declined requests should have a fast “choose another slot” recovery path
+- Simple language improves accessibility for international students and edge users
+- Privacy reassurance should be emphasised during registration and booking
 
 These insights will inform user story creation in Week 4.

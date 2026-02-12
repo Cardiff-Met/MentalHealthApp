@@ -7,7 +7,7 @@
 # 1. Team Details and Confirmed Roles
 
 | Name | Student | Role |
-|------|------------|------|
+|------|---------|------|
 | Student 1 | Noe | Product Owner & Scrum Master |
 | Student 2 | Luca | DevOps & QA Lead |
 
@@ -59,7 +59,6 @@
 ---
 
 ### Disagreement Resolution Process
-
 1. Team discussion
 2. Time-limited vote
 3. Product Owner final decision if unresolved
@@ -105,9 +104,10 @@
 - Document Agile process
 
 ### Week 8
-- Implement therapy booking system
+- Implement therapy booking as a **request/confirmation** workflow
+- Implement booking states: `Pending` → `Confirmed` / `Declined`
+- Implement slot concurrency protection (prevent double booking)
 - Conduct security review (JWT, hashing, validation)
-- Increase test coverage
 
 ### Week 9
 - Apply Test-Driven Development to at least one feature
@@ -118,7 +118,7 @@
 - Final testing and bug fixes
 - Security checks
 - Complete documentation
-- Submitfinal product and report 
+- Submit final product and report
 
 ---
 
@@ -129,12 +129,16 @@
 - Limited development capacity (2-person team)
 - Client–server integration issues
 - Security misconfiguration
+- Booking conflicts due to concurrency (two students selecting same slot)
+- Delays or ambiguity in external service confirmation
 
 ### Assumptions
 - Users access via web browser
 - PostgreSQL used for secure data storage
 - JWT-based authentication implemented
-- Personalisation uses rule-based or lightweight sentiment analysis
+- Appointment availability is managed externally by the counselling service
+- The app can forward booking requests to the service (integration point)
+- For MVP, confirmation may be simulated, but the booking state model remains the same
 
 ---
 
@@ -142,10 +146,9 @@
 
 ## 4.1 Primary User Journey
 
-**Primary Journey:**
-Student logs in → records mood → receives personalised resources → books support session.
+Student logs in → records mood → receives personalised resources → requests a therapy session slot → receives confirmation details.
 
-This represents the minimum usable version delivering core value.
+This represents a minimum usable version delivering core value while remaining realistic about how human services operate.
 
 ---
 
@@ -180,10 +183,7 @@ This represents the minimum usable version delivering core value.
 - Welcome message
 - “Record Mood” button
 - Recommended resources
-- Upcoming bookings
-
-**Error State**
-- No recommendations available
+- Booking status summary (e.g., pending/confirmed)
 
 ---
 
@@ -211,50 +211,78 @@ This represents the minimum usable version delivering core value.
 - Short description
 - Link button
 
-**Access Note**
-- Available to authenticated users only
+---
+
+### Screen 5 – Booking Calendar Page (Request-Based Booking)
+
+**Purpose:** Allow students to request an appointment slot.
+
+**Displays**
+- Weekly / monthly calendar view
+- Slots shown as “Available” (provided by service/external schedule)
+- Slot selection + “Request booking” button
+
+**Booking Logic (Option C)**
+- Student selects an available slot and submits a booking request
+- System creates a booking record with status `Pending`
+- The selected slot is temporarily locked/held to prevent immediate double booking
+- Booking details are forwarded to the counselling service’s existing workflow/system
+- Service responds with either:
+- `Confirmed` (appointment accepted)
+- `Declined` (slot not available / therapist unavailable / admin rejection)
+- Student sees the status in-app, and if declined, is prompted to choose another slot
+
+**Validation / Conflict Handling**
+- If another student submits first, system returns:
+“This time slot is no longer available. Please select another.”
+- If external service declines, system returns:
+“This slot could not be confirmed. Please select another time.”
 
 ---
 
-### Screen 5 – Booking Page
+### Screen 6 – Booking Status / Confirmation Page
 
-**Purpose:** Allow therapy session booking.
+**Purpose:** Make booking outcome clear and reduce anxiety.
 
-**Inputs**
-- Service selection
-- Date picker
-- Time slot selection
-- Confirm booking button
-
-**Validation**
-- Unavailable time slot
-- Required field errors
+**Displays**
+- Status label: Pending / Confirmed / Declined
+- If Confirmed: date/time + service location/contact notes
+- If Declined: explanation text + “Choose another slot” button
+- If Pending: “We will notify you when confirmed” message
 
 ---
 
-## 4.3 Alignment Check
+## 4.3 Booking Workflow (External Confirmation Model)
+
+Therapists do not use this application directly.
+
+1. The student requests a time slot in the app.
+2. The app records the request as `Pending` and forwards the details to the counselling service’s existing scheduling workflow.
+3. The counselling service confirms or declines the request using their existing systems.
+4. The student’s booking status updates to `Confirmed` or `Declined` inside the app.
+
+This keeps availability management external while maintaining a realistic booking process.
+
+---
+
+## 4.4 Alignment Check
 
 | Must-Have Capability | Roadmap Delivery | Prototype Representation |
 |----------------------|------------------|--------------------------|
 | Secure user registration | Week 4 | Login Screen |
 | Personalised support | Weeks 5–6 | Mood + Resources Screens |
-| Therapy booking | Week 8 | Booking Screen |
-
-All must-have capabilities are represented in:
-- The roadmap
-- The prototype
-- The primary user journey
+| Therapy booking | Week 8 | Booking Calendar + Status Screens |
 
 ---
 
 # 5. Summary
 
 This document forms the complete **Assessment Point 1 submission**, covering:
-
 - Product Vision
 - Product Management (roles and roadmap)
 - Risks and assumptions
 - Low-fidelity prototype description
 - Primary user journey
+- Request-based booking workflow with external confirmation
 
 It establishes a structured Agile foundation for implementation in Weeks 3–10.
