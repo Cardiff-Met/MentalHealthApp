@@ -7,10 +7,12 @@
 
 | Name | Student | Role |
 |------|------------|------|
-| Student 1 | Noe | Product Owner & Scrum Master |
-| Student 2 | Luca | DevOps & QA Lead |
+| Student 1 | Noe | Product Owner & DevOps Lead |
+| Student 2 | Luca | QA & CI/CD Lead |
+| Student 3 | Ahmed | Developer |
+| Student 4 | Abdisamad | Developer |
 
-> Due to the small team size, roles are combined. Responsibilities may rotate as the project progresses.
+> All team members contribute to development. Specialist roles indicate areas of primary responsibility alongside coding.
 
 ---
 
@@ -37,13 +39,13 @@ This project aims to develop a secure client–server application that provides 
 ## Initial Backlog – Must-Have Capabilities (Epics)
 
 1. **Secure User Registration and Profile Management**
- - Student sign-up, login, profile creation, and GDPR-compliant handling of sensitive data.
+   - Student sign-up, login, profile creation, and GDPR-compliant handling of sensitive data.
 
 2. **Personalised Mental Health Resources and Recommendations**
- - Access to self-help materials, mood input, and sentiment-based personalised recommendations.
+   - Access to self-help materials, mood input, and sentiment-based personalised recommendations.
 
 3. **Support Access and Therapy Session Booking**
- - Viewing Cardiff-based mental health services, booking therapy sessions, and accessing chatbot support for immediate assistance.
+   - Viewing Cardiff-based mental health services, booking therapy sessions, and accessing chatbot support for immediate assistance.
 
 ---
 
@@ -59,18 +61,18 @@ This project aims to develop a secure client–server application that provides 
 
 ### Decision Making
 - Product-related decisions led by the Product Owner
-- Technical decisions agreed collaboratively
+- Technical decisions agreed collaboratively by all four members
 
 ### Task Management
-- Tasks reviewed weekly
-- Missed or delayed tasks discussed and re-prioritised during sprint planning
+- Tasks reviewed weekly during sprint planning (led by Noe)
+- Missed or delayed tasks discussed and re-prioritised as a team
 
 ---
 
 ## Workshop Week 1 Outcome
 
 By the end of Workshop Week 1, the team has:
-- Confirmed team membership and roles
+- Confirmed team membership and roles (4 members)
 - Selected the Personalized Mental Health Support App project
 - Defined a clear Product Vision
 - Identified three essential high-level capabilities (epics)

@@ -8,8 +8,12 @@
 
 | Name | Student | Role |
 |------|---------|------|
-| Student 1 | Noe | Product Owner & Scrum Master |
-| Student 2 | Luca | DevOps & QA Lead |
+| Student 1 | Noe | Product Owner & DevOps Lead |
+| Student 2 | Luca | QA & CI/CD Lead |
+| Student 3 | Ahmed | Developer |
+| Student 4 | Abdisamad | Developer |
+
+> All team members contribute to development. Specialist roles indicate areas of primary responsibility alongside coding.
 
 ---
 
@@ -28,33 +32,61 @@
 
 ## 3.1 Responsibility Map
 
-### Product Owner & Scrum Master
+### Product Owner & DevOps Lead (Noe)
 
 **Weekly Responsibilities**
 - Maintain and prioritise the product backlog
 - Ensure alignment with product vision
 - Organise sprint planning and weekly reviews
-- Track roadmap progress
+- Maintain GitHub repository and branching workflow
+- Set up and maintain Docker container configuration
 - Make scope decisions
 
 **Decision Authority**
-- Final decision on backlog priority
-- Final decision on scope trade-offs
+- Final decision on backlog priority and scope trade-offs
+- GitHub repository structure and branching strategy
+- Docker and deployment configuration
 
 ---
 
-### DevOps & QA Lead
+### QA & CI/CD Lead (Luca)
 
 **Weekly Responsibilities**
-- Maintain GitHub repository and branching workflow
-- Support Docker container configuration
-- Set up and maintain CI pipeline
+- Set up and maintain the CI pipeline
 - Ensure automated tests are written and tracked
+- Conduct security checks (JWT, hashing, input validation)
 - Record testing and security evidence
+- Contribute to feature development
 
 **Decision Authority**
-- Technical tooling choices
-- CI/CD and container configuration
+- CI/CD pipeline configuration
+- Testing strategy and tooling choices
+
+---
+
+### Developer (Ahmed)
+
+**Weekly Responsibilities**
+- Implement assigned features and user stories each sprint
+- Write unit tests for own code
+- Participate in code reviews via pull requests
+- Collaborate on integration and bug fixing
+
+**Decision Authority**
+- Implementation approach for assigned tasks (in agreement with the team)
+
+---
+
+### Developer (Abdisamad)
+
+**Weekly Responsibilities**
+- Implement assigned features and user stories each sprint
+- Write unit tests for own code
+- Participate in code reviews via pull requests
+- Collaborate on integration and bug fixing
+
+**Decision Authority**
+- Implementation approach for assigned tasks (in agreement with the team)
 
 ---
 
@@ -70,6 +102,7 @@
 ### Week 1
 - Product Vision completed
 - Initial backlog defined
+- Team of 4 confirmed with roles assigned
 
 ### Week 2 (Assessment Point 1 Submission)
 - Confirm roles and responsibilities
@@ -82,26 +115,28 @@
 - Define acceptance criteria
 - Prioritise backlog
 
-### Week 4
-- Set up GitHub repository
+### Week 4 (Assessment Point 2 Submission)
+- User stories and acceptance criteria finalised
+- Features identified and prioritised (Must / Should / Could)
+- Traceability from personas → scenarios → stories → features documented
+- Submit requirements pack
+
+### Week 5
+- Set up GitHub repository with branching workflow
 - Implement authentication API (register/login)
 - Create initial database schema
 - Deliver first working API endpoint
 
-### Week 5
+### Week 6
 - Connect client to server (first end-to-end feature)
 - Implement mood input feature
 - Begin automated testing
 
-### Week 6
+### Week 7 (Assessment Point 2 Milestone)
 - Implement personalised resource logic
 - Docker container setup
 - Configure basic CI pipeline
-
-### Week 7 (Assessment Point 2 Milestone)
-- Demonstrate working core features
-- Evidence of branching and pull requests
-- Document Agile process
+- Demonstrate working core features with evidence of branching and pull requests
 
 ### Week 8
 - Implement therapy booking as a **request/confirmation** workflow
@@ -126,7 +161,7 @@
 
 ### Key Risks
 - Scope expansion beyond minimum usable version
-- Limited development capacity (2-person team)
+- Development capacity constraints across 4 team members
 - Client–server integration issues
 - Security misconfiguration
 - Booking conflicts due to concurrency (two students selecting same slot)
@@ -181,7 +216,7 @@ This represents a minimum usable version delivering core value while remaining r
 
 **Displays**
 - Welcome message
-- “Record Mood” button
+- "Record Mood" button
 - Recommended resources
 - Booking status summary (e.g., pending/confirmed)
 
@@ -219,24 +254,24 @@ This represents a minimum usable version delivering core value while remaining r
 
 **Displays**
 - Weekly / monthly calendar view
-- Slots shown as “Available” (provided by service/external schedule)
-- Slot selection + “Request booking” button
+- Slots shown as "Available" (provided by service/external schedule)
+- Slot selection + "Request booking" button
 
 **Booking Logic (Option C)**
 - Student selects an available slot and submits a booking request
 - System creates a booking record with status `Pending`
 - The selected slot is temporarily locked/held to prevent immediate double booking
-- Booking details are forwarded to the counselling service’s existing workflow/system
+- Booking details are forwarded to the counselling service's existing workflow/system
 - Service responds with either:
-- `Confirmed` (appointment accepted)
-- `Declined` (slot not available / therapist unavailable / admin rejection)
+  - `Confirmed` (appointment accepted)
+  - `Declined` (slot not available / therapist unavailable / admin rejection)
 - Student sees the status in-app, and if declined, is prompted to choose another slot
 
 **Validation / Conflict Handling**
 - If another student submits first, system returns:
-“This time slot is no longer available. Please select another.”
+  "This time slot is no longer available. Please select another."
 - If external service declines, system returns:
-“This slot could not be confirmed. Please select another time.”
+  "This slot could not be confirmed. Please select another time."
 
 ---
 
@@ -247,8 +282,8 @@ This represents a minimum usable version delivering core value while remaining r
 **Displays**
 - Status label: Pending / Confirmed / Declined
 - If Confirmed: date/time + service location/contact notes
-- If Declined: explanation text + “Choose another slot” button
-- If Pending: “We will notify you when confirmed” message
+- If Declined: explanation text + "Choose another slot" button
+- If Pending: "We will notify you when confirmed" message
 
 ---
 
@@ -257,9 +292,9 @@ This represents a minimum usable version delivering core value while remaining r
 Therapists do not use this application directly.
 
 1. The student requests a time slot in the app.
-2. The app records the request as `Pending` and forwards the details to the counselling service’s existing scheduling workflow.
+2. The app records the request as `Pending` and forwards the details to the counselling service's existing scheduling workflow.
 3. The counselling service confirms or declines the request using their existing systems.
-4. The student’s booking status updates to `Confirmed` or `Declined` inside the app.
+4. The student's booking status updates to `Confirmed` or `Declined` inside the app.
 
 This keeps availability management external while maintaining a realistic booking process.
 
@@ -269,8 +304,8 @@ This keeps availability management external while maintaining a realistic bookin
 
 | Must-Have Capability | Roadmap Delivery | Prototype Representation |
 |----------------------|------------------|--------------------------|
-| Secure user registration | Week 4 | Login Screen |
-| Personalised support | Weeks 5–6 | Mood + Resources Screens |
+| Secure user registration | Week 5 | Login Screen |
+| Personalised support | Weeks 6–7 | Mood + Resources Screens |
 | Therapy booking | Week 8 | Booking Calendar + Status Screens |
 
 ---
@@ -285,4 +320,4 @@ This document forms the complete **Assessment Point 1 submission**, covering:
 - Primary user journey
 - Request-based booking workflow with external confirmation
 
-It establishes a structured Agile foundation for implementation in Weeks 3–10.
+It establishes a structured Agile foundation for implementation in Weeks 5–10.
