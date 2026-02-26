@@ -3,75 +3,129 @@ const jwt = require('jsonwebtoken');
 const db = require('../db/connection');
 
 const JWT_SECRET = process.env.JWT_SECRET;
+const REFRESH_SECRET = process.env.REFRESH_SECRET;
 const SALT_ROUNDS = 10;
+
+function generateAccessToken(payload) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
+}
+
+function generateRefreshToken(payload) {
+  return jwt.sign(payload, REFRESH_SECRET, { expiresIn: '7d' });
+}
 
 // POST /api/auth/register
 async function register(req, res) {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    if (!email || !password) {
-        return res.status(400).json({ error: 'Email and password are required.' });
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required.' });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: 'Invalid email format.' });
+  }
+
+  if (password.length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+  }
+
+  try {
+    const [existing] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
+    if (existing.length > 0) {
+      return res.status(409).json({ error: 'An account with this email already exists.' });
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        return res.status(400).json({ error: 'Invalid email format.' });
-    }
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+    const [result] = await db.query('INSERT INTO users (email, password) VALUES (?, ?)', [
+      email,
+      hashedPassword,
+    ]);
 
-    if (password.length < 8) {
-        return res.status(400).json({ error: 'Password must be at least 8 characters.' });
-    }
+    const payload = { userId: result.insertId, email };
+    const accessToken = generateAccessToken(payload);
+    const refreshToken = generateRefreshToken(payload);
 
-    try {
-        const [existing] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
-        if (existing.length > 0) {
-            return res.status(409).json({ error: 'An account with this email already exists.' });
-        }
+    // Store refresh token in httpOnly cookie
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: false, // set to true in production with HTTPS
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
+    });
 
-        const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-        const [result] = await db.query(
-            'INSERT INTO users (email, password) VALUES (?, ?)',
-            [email, hashedPassword]
-        );
-
-        const token = jwt.sign({ userId: result.insertId, email }, JWT_SECRET, { expiresIn: '24h' });
-
-        res.status(201).json({ message: 'Account created successfully.', token });
-    } catch (err) {
-        console.error('Register error:', err);
-        res.status(500).json({ error: 'Registration failed. Please try again.' });
-    }
+    res.status(201).json({ message: 'Account created successfully.', accessToken });
+  } catch (err) {
+    console.error('Register error:', err);
+    res.status(500).json({ error: 'Registration failed. Please try again.' });
+  }
 }
 
 // POST /api/auth/login
 async function login(req, res) {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    if (!email || !password) {
-        return res.status(400).json({ error: 'Email and password are required.' });
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required.' });
+  }
+
+  try {
+    const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    try {
-        const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+    const user = rows[0];
+    const passwordMatch = await bcrypt.compare(password, user.password);
 
-        if (rows.length === 0) {
-            return res.status(401).json({ error: 'Invalid email or password.' });
-        }
-
-        const user = rows[0];
-        const passwordMatch = await bcrypt.compare(password, user.password);
-
-        if (!passwordMatch) {
-            return res.status(401).json({ error: 'Invalid email or password.' });
-        }
-
-        const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
-
-        res.json({ message: 'Login successful.', token });
-    } catch (err) {
-        console.error('Login error:', err);
-        res.status(500).json({ error: 'Login failed. Please try again.' });
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Invalid email or password.' });
     }
+
+    const payload = { userId: user.id, email: user.email };
+    const accessToken = generateAccessToken(payload);
+    const refreshToken = generateRefreshToken(payload);
+
+    // Store refresh token in httpOnly cookie
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.json({ message: 'Login successful.', accessToken });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Login failed. Please try again.' });
+  }
 }
 
-module.exports = { register, login };
+// POST /api/auth/refresh
+async function refresh(req, res) {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!refreshToken) {
+    return res.status(401).json({ error: 'No refresh token provided.' });
+  }
+
+  try {
+    const decoded = jwt.verify(refreshToken, REFRESH_SECRET);
+    const accessToken = generateAccessToken({ userId: decoded.userId, email: decoded.email });
+    res.json({ accessToken });
+  } catch {
+    return res
+      .status(403)
+      .json({ error: 'Invalid or expired refresh token. Please log in again.' });
+  }
+}
+
+// POST /api/auth/logout
+async function logout(req, res) {
+  res.clearCookie('refreshToken');
+  res.json({ message: 'Logged out successfully.' });
+}
+
+module.exports = { register, login, refresh, logout };

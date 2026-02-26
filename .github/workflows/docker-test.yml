@@ -1,0 +1,89 @@
+name: Docker Build & Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  docker-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create .env file with secrets
+        run: |
+          echo "JWT_SECRET=test-jwt-secret-for-ci" >> .env
+          echo "REFRESH_SECRET=test-refresh-secret-for-ci" >> .env
+
+      - name: Build Docker images
+        run: docker compose build
+
+      - name: Start Docker containers
+        run: docker compose up -d
+
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for database to be ready..."
+          for i in {1..30}; do
+            if docker compose exec -T db mysqladmin ping -h localhost -uroot -proot1234 --silent; then
+              echo "Database is ready!"
+              break
+            fi
+            echo "Waiting for database... ($i/30)"
+            sleep 2
+          done
+
+          echo "Waiting for server to be ready..."
+          for i in {1..30}; do
+            if curl -f http://localhost:3000/health 2>/dev/null || curl -f http://localhost:3000/ 2>/dev/null; then
+              echo "Server is ready!"
+              break
+            fi
+            echo "Waiting for server... ($i/30)"
+            sleep 2
+          done
+
+      - name: Check container status
+        run: |
+          echo "=== Container Status ==="
+          docker compose ps
+          
+          echo ""
+          echo "=== Database Container Logs ==="
+          docker compose logs db | tail -20
+          
+          echo ""
+          echo "=== Server Container Logs ==="
+          docker compose logs server | tail -20
+
+      - name: Test database connection
+        run: |
+          docker compose exec -T db mysql -uroot -proot1234 -e "SELECT 1;" mental_health_app
+
+      - name: Test server health endpoint
+        run: |
+          # Try to curl the server
+          curl -f http://localhost:3000/ || curl -f http://localhost:3000/health || exit 1
+
+      - name: Verify containers are running
+        run: |
+          # Check if containers are still up
+          if [ "$(docker compose ps -q | wc -l)" -lt "2" ]; then
+            echo "❌ Not all containers are running!"
+            docker compose ps
+            exit 1
+          else
+            echo "✅ All containers are running successfully!"
+          fi
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker compose down -v
+          rm -f .env
+

@@ -1,0 +1,65 @@
+name: Code Quality Checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint-and-format:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      # Server checks
+      - name: Install Server dependencies
+        run: npm install
+        working-directory: ./Server
+
+      - name: Run Server lint
+        run: npm run lint
+        working-directory: ./Server
+
+      - name: Check Server formatting
+        run: npm run format:check
+        working-directory: ./Server
+
+      # Client checks
+      - name: Install Client dependencies
+        run: npm install
+        working-directory: ./Client
+
+      - name: Run Client lint
+        run: npm run lint
+        working-directory: ./Client
+
+      - name: Check Client formatting
+        run: npm run format:check
+        working-directory: ./Client
+
+  # Optional: Fail the workflow if any checks fail
+  results:
+    runs-on: ubuntu-latest
+    needs: lint-and-format
+    if: always()
+    steps:
+      - name: Check workflow status
+        run: |
+          if [ "${{ needs.lint-and-format.result }}" != "success" ]; then
+            echo "❌ Code quality checks failed!"
+            exit 1
+          else
+            echo "✅ All code quality checks passed!"
+          fi
+
