@@ -17,8 +17,16 @@ jobs:
 
       - name: Create .env file with secrets
         run: |
-          echo "JWT_SECRET=test-jwt-secret-for-ci" >> .env
-          echo "REFRESH_SECRET=test-refresh-secret-for-ci" >> .env
+          mkdir -p server
+          echo "PORT=3000" >> server/.env
+          echo "CLIENT_URL=http://localhost:5173" >> server/.env
+          echo "DB_HOST=db" >> server/.env
+          echo "DB_PORT=3306" >> server/.env
+          echo "DB_USER=root" >> server/.env
+          echo "DB_PASSWORD=root1234" >> server/.env
+          echo "DB_NAME=mental_health_app" >> server/.env
+          echo "JWT_SECRET=test-jwt-secret-for-ci" >> server/.env
+          echo "REFRESH_SECRET=test-refresh-secret-for-ci" >> server/.env
 
       - name: Build Docker images
         run: docker compose build
@@ -29,85 +37,93 @@ jobs:
       - name: Wait for database to be ready
         run: |
           echo "Waiting for database to be ready..."
-          sleep 10
-          
           for i in {1..30}; do
             if docker compose exec -T db mysqladmin ping -h localhost -u root -proot1234 --silent 2>/dev/null; then
               echo "✅ Database is ready!"
-              break
+              exit 0
             fi
             echo "Waiting for database... ($i/30)"
             sleep 3
           done
-          
-          # Give it extra time to fully initialize
-          sleep 5
+          echo "❌ Database did not become ready in time"
+          docker compose logs db
+          exit 1
 
       - name: Wait for server to be ready
         run: |
           echo "Waiting for server to be ready..."
           for i in {1..30}; do
-            if curl -f http://localhost:3000/ 2>/dev/null || curl -f http://localhost:3000/health 2>/dev/null; then
+            if curl -sf http://localhost:3000/health; then
               echo "✅ Server is ready!"
-              break
+              exit 0
             fi
             echo "Waiting for server... ($i/30)"
             sleep 3
           done
+          echo "❌ Server did not become ready in time"
+          docker compose logs server
+          exit 1
 
       - name: Check container status
         run: |
           echo "=== Container Status ==="
           docker compose ps
-          
           echo ""
-          echo "=== Database Container Logs ==="
+          echo "=== Database Logs ==="
           docker compose logs db | tail -20
-          
           echo ""
-          echo "=== Server Container Logs ==="
+          echo "=== Server Logs ==="
           docker compose logs server | tail -20
 
-      - name: Test database connection
+      - name: Test health endpoint
         run: |
-          echo "Verifying database container is healthy..."
-          # Check if database container is running
-          if docker compose ps db | grep -q "Up"; then
-            echo "✅ Database container is running"
-          else
-            echo "❌ Database container is not running"
-            docker compose logs db
-            exit 1
-          fi
-
-      - name: Test server health endpoint
-        run: |
-          echo "Testing server health endpoint..."
           response=$(curl -s http://localhost:3000/health)
           echo "Response: $response"
-          
           if echo "$response" | grep -q "ok"; then
-            echo "✅ Server health check passed"
+            echo "✅ Health check passed"
           else
-            echo "❌ Server health check failed"
-            docker compose logs server
+            echo "❌ Health check failed"
             exit 1
           fi
 
-      - name: Verify containers are running
+      - name: Test register endpoint
         run: |
-          # Check if containers are still up
+          response=$(curl -s -X POST http://localhost:3000/api/auth/register \
+            -H "Content-Type: application/json" \
+            -d '{"email":"ci-test@test.com","password":"password123"}')
+          echo "Response: $response"
+          if echo "$response" | grep -q "accessToken"; then
+            echo "✅ Register endpoint passed"
+          else
+            echo "❌ Register endpoint failed"
+            exit 1
+          fi
+
+      - name: Test login endpoint
+        run: |
+          response=$(curl -s -X POST http://localhost:3000/api/auth/login \
+            -H "Content-Type: application/json" \
+            -d '{"email":"ci-test@test.com","password":"password123"}')
+          echo "Response: $response"
+          if echo "$response" | grep -q "accessToken"; then
+            echo "✅ Login endpoint passed"
+          else
+            echo "❌ Login endpoint failed"
+            exit 1
+          fi
+
+      - name: Verify all containers running
+        run: |
           if [ "$(docker compose ps -q | wc -l)" -lt "2" ]; then
             echo "❌ Not all containers are running!"
             docker compose ps
             exit 1
           else
-            echo "✅ All containers are running successfully!"
+            echo "✅ All containers running successfully"
           fi
 
       - name: Cleanup
         if: always()
         run: |
           docker compose down -v
-          rm -f .env
-
+          rm -f server/.env
