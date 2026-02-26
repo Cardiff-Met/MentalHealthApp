@@ -236,7 +236,7 @@ cd ../Server && npm run format:check
 docker compose up --build
 ```
 
-See [GITHUB_ACTIONS.md](./GITHUB_ACTIONS.md) for details.
+See [GITHUB_ACTIONS.md](./docs/GithubActions.md) for details.
 
 ---
 
@@ -297,7 +297,7 @@ Schema is auto-applied on first Docker Compose start via `./Server/src/db/schema
 
 - [Server API Documentation](./docs/Server.md) - Detailed API reference
 - [Client Documentation](./docs/Client.md) - Frontend setup and structure
-- [GitHub Actions Guide](./GITHUB_ACTIONS.md) - CI/CD automation
+- [GitHub Actions Guide](./docs/GithubActions.md) - CI/CD automation
 
 ---
 
@@ -458,6 +458,6 @@ This project is part of Cardiff Metropolitan University coursework for SEN5002 A
 - [API Documentation](http://localhost:3000/api-docs) (when server running)
 - [Server Docs](./docs/Server.md)
 - [Client Docs](./docs/Client.md)
-- [GitHub Actions](./GITHUB_ACTIONS.md)
+- [GitHub Actions](./docs/GithubActions.md)
 
 
