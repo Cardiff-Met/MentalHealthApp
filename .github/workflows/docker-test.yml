@@ -82,8 +82,17 @@ jobs:
 
       - name: Test server health endpoint
         run: |
-          # Try to curl the server
-          curl -f http://localhost:3000/ || curl -f http://localhost:3000/health || exit 1
+          echo "Testing server health endpoint..."
+          response=$(curl -s http://localhost:3000/health)
+          echo "Response: $response"
+          
+          if echo "$response" | grep -q "ok"; then
+            echo "✅ Server health check passed"
+          else
+            echo "❌ Server health check failed"
+            docker compose logs server
+            exit 1
+          fi
 
       - name: Verify containers are running
         run: |
