@@ -48,7 +48,9 @@ describe('authenticateToken middleware', () => {
     const res = mockRes();
 
     // "Basic sometoken".split(' ')[1] = "sometoken" — jwt.verify will throw
-    jwt.verify.mockImplementation(() => { throw new Error('invalid'); });
+    jwt.verify.mockImplementation(() => {
+      throw new Error('invalid');
+    });
 
     authenticateToken(req, res, next);
 
@@ -63,7 +65,9 @@ describe('authenticateToken middleware', () => {
     const req = { headers: { authorization: 'Bearer badtoken' } };
     const res = mockRes();
 
-    jwt.verify.mockImplementation(() => { throw new Error('invalid signature'); });
+    jwt.verify.mockImplementation(() => {
+      throw new Error('invalid signature');
+    });
 
     authenticateToken(req, res, next);
 
@@ -76,7 +80,9 @@ describe('authenticateToken middleware', () => {
     const req = { headers: { authorization: 'Bearer expiredtoken' } };
     const res = mockRes();
 
-    jwt.verify.mockImplementation(() => { throw new Error('jwt expired'); });
+    jwt.verify.mockImplementation(() => {
+      throw new Error('jwt expired');
+    });
 
     authenticateToken(req, res, next);
 
