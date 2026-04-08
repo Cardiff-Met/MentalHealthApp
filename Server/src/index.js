@@ -9,6 +9,7 @@ const authRoutes = require('./routes/auth');
 const moodRoutes = require('./routes/mood');
 const resourcesRoutes = require('./routes/resources');
 const bookingRoutes = require('./routes/booking');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -36,6 +37,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/mood', moodRoutes);
 app.use('/api/resources', resourcesRoutes);
 app.use('/api/booking', bookingRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 handler
 app.use((req, res) => {

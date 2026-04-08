@@ -1,0 +1,101 @@
+<svg width="860" height="310" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif, system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <filter id="card-shadow">
+      <feDropShadow dx="0" dy="1" stdDeviation="4" flood-color="#00000010"/>
+    </filter>
+    <marker id="arr" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto">
+      <path d="M0,0.5 L0,5.5 L6.5,3 Z" fill="#cbd5e1"/>
+    </marker>
+    <marker id="arr-r" markerWidth="7" markerHeight="7" refX="1" refY="3" orient="auto">
+      <path d="M6.5,0.5 L6.5,5.5 L0,3 Z" fill="#cbd5e1"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="860" height="310" fill="#f8fafc"/>
+
+  <!-- ── GitHub Actions ─────────────────────────────────────── -->
+  <rect x="14" y="12" width="832" height="34" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <circle cx="32" cy="29" r="7" fill="#22c55e"/>
+  <text x="32" y="33" text-anchor="middle" font-size="9" fill="white" font-weight="700">CI</text>
+  <text x="48" y="33" font-size="11" font-weight="600" fill="#15803d">GitHub Actions</text>
+  <text x="156" y="33" font-size="11" fill="#86efac">·</text>
+  <text x="164" y="33" font-size="11" fill="#4ade80">ESLint + Prettier</text>
+  <text x="287" y="33" font-size="11" fill="#86efac">·</text>
+  <text x="295" y="33" font-size="11" fill="#4ade80">Docker build &amp; health check</text>
+  <text x="490" y="33" font-size="11" fill="#86efac">·</text>
+  <text x="498" y="33" font-size="11" fill="#86efac">triggers on push / pull request</text>
+
+  <!-- ── Docker Compose zone ───────────────────────────────── -->
+  <rect x="244" y="56" width="602" height="238" rx="14" fill="#f1f5f9"/>
+  <text x="545" y="74" text-anchor="middle" font-size="9.5" font-weight="600" fill="#94a3b8" letter-spacing="1">DOCKER COMPOSE</text>
+
+  <!-- ── Client card ───────────────────────────────────────── -->
+  <rect x="14" y="60" width="208" height="228" rx="12" fill="white" filter="url(#card-shadow)" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="118" y="106" text-anchor="middle" font-size="30">🌐</text>
+  <text x="118" y="133" text-anchor="middle" font-size="16" font-weight="700" fill="#1e1b4b">Client</text>
+  <text x="118" y="152" text-anchor="middle" font-size="11" fill="#6366f1">React 19 + Vite</text>
+
+  <line x1="34" y1="163" x2="202" y2="163" stroke="#f1f5f9" stroke-width="1.5"/>
+
+  <text x="118" y="182" text-anchor="middle" font-size="10" fill="#94a3b8">Tailwind CSS  ·  React Router</text>
+  <text x="118" y="198" text-anchor="middle" font-size="10" fill="#94a3b8">JWT  ·  5 pages</text>
+
+  <line x1="34" y1="210" x2="202" y2="210" stroke="#f1f5f9" stroke-width="1.5"/>
+
+  <rect x="46" y="221" width="124" height="20" rx="10" fill="#eef2ff"/>
+  <text x="108" y="235" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="600">localhost : 5173</text>
+  <text x="118" y="260" text-anchor="middle" font-size="9" fill="#cbd5e1">not containerised</text>
+
+  <!-- ── Arrow: Client ↔ Server ────────────────────────────── -->
+  <line x1="224" y1="164" x2="256" y2="164" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="256" y1="178" x2="224" y2="178" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arr-r)"/>
+  <text x="240" y="160" text-anchor="middle" font-size="8.5" fill="#94a3b8">HTTP</text>
+  <text x="240" y="191" text-anchor="middle" font-size="8.5" fill="#94a3b8">JSON</text>
+
+  <!-- ── Server card ───────────────────────────────────────── -->
+  <rect x="260" y="78" width="248" height="208" rx="12" fill="white" filter="url(#card-shadow)" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="384" y="118" text-anchor="middle" font-size="30">⚙️</text>
+  <text x="384" y="145" text-anchor="middle" font-size="16" font-weight="700" fill="#2e1065">Server</text>
+  <text x="384" y="164" text-anchor="middle" font-size="11" fill="#7c3aed">Node.js 20 + Express 5</text>
+
+  <line x1="280" y1="175" x2="488" y2="175" stroke="#f1f5f9" stroke-width="1.5"/>
+
+  <text x="384" y="194" text-anchor="middle" font-size="10" fill="#94a3b8">REST API  ·  JWT auth</text>
+  <text x="384" y="210" text-anchor="middle" font-size="10" fill="#94a3b8">bcrypt  ·  Role-based access</text>
+  <text x="384" y="226" text-anchor="middle" font-size="10" fill="#94a3b8">Swagger UI</text>
+
+  <line x1="280" y1="238" x2="488" y2="238" stroke="#f1f5f9" stroke-width="1.5"/>
+
+  <rect x="316" y="249" width="136" height="20" rx="10" fill="#ede9fe"/>
+  <text x="384" y="263" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="600">container : 3000</text>
+
+  <!-- ── Arrow: Server → Database ──────────────────────────── -->
+  <line x1="510" y1="182" x2="552" y2="182" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="531" y="177" text-anchor="middle" font-size="8.5" fill="#94a3b8">SQL</text>
+
+  <!-- ── Database card ─────────────────────────────────────── -->
+  <rect x="556" y="78" width="274" height="208" rx="12" fill="white" filter="url(#card-shadow)" stroke="#e2e8f0" stroke-width="1"/>
+
+  <text x="693" y="118" text-anchor="middle" font-size="30">🗄️</text>
+  <text x="693" y="145" text-anchor="middle" font-size="16" font-weight="700" fill="#3b0764">Database</text>
+  <text x="693" y="164" text-anchor="middle" font-size="11" fill="#9333ea">MySQL 8</text>
+
+  <line x1="576" y1="175" x2="810" y2="175" stroke="#f1f5f9" stroke-width="1.5"/>
+
+  <text x="693" y="194" text-anchor="middle" font-size="10" fill="#94a3b8">6 tables  ·  FK constraints</text>
+  <text x="693" y="210" text-anchor="middle" font-size="10" fill="#94a3b8">Parameterised queries</text>
+  <text x="693" y="226" text-anchor="middle" font-size="10" fill="#94a3b8">Persistent named volume</text>
+
+  <line x1="576" y1="238" x2="810" y2="238" stroke="#f1f5f9" stroke-width="1.5"/>
+
+  <rect x="625" y="249" width="136" height="20" rx="10" fill="#f3e8ff"/>
+  <text x="693" y="263" text-anchor="middle" font-size="9" fill="#6b21a8" font-weight="600">container : 3306</text>
+
+  <!-- ── Footer ─────────────────────────────────────────────── -->
+  <text x="14" y="298" font-size="9" fill="#cbd5e1">MindSpace · System Architecture · SEN5002 Agile Development and DevOps</text>
+
+</svg>

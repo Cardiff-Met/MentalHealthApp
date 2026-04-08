@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find '/c/Users/luca/OneDrive/Documents/Cardiff/Agile Development and DevOps' -name *.jsx -type f)",
+      "Bash(npm install:*)",
+      "Bash(npx jest:*)",
+      "Bash(dir /s /b \"C:\\\\Users\\\\luca\\\\OneDrive\\\\Documents\\\\Cardiff\\\\Agile Development and DevOps\\\\Client\\\\src\")"
+    ]
+  }
+}

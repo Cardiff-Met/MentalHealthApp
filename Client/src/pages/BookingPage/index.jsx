@@ -2,6 +2,31 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context';
 
+const FILTERS = ['all', 'morning', 'afternoon', 'evening'];
+
+const TIME_ICONS = {
+  morning: '🌅',
+  afternoon: '☀️',
+  evening: '🌙',
+};
+
+function formatDate(dateStr) {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+}
+
+function formatTime(timeStr) {
+  const [h, m] = timeStr.split(':');
+  const hour = parseInt(h, 10);
+  const ampm = hour >= 12 ? 'pm' : 'am';
+  const display = hour > 12 ? hour - 12 : hour || 12;
+  return `${display}:${m} ${ampm}`;
+}
+
 export default function BookingPage() {
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,131 +80,120 @@ export default function BookingPage() {
   }
 
   const filteredSlots =
-    filter === 'all'
-      ? slots
-      : slots.filter((slot) => slot.time_of_day === filter);
+    filter === 'all' ? slots : slots.filter((s) => s.time_of_day === filter);
 
-  // Show booking confirmation
+  // Booking confirmation
   if (bookingStatus) {
     return (
-      <div style={{ maxWidth: '600px', margin: '50px auto', padding: '2rem' }}>
-        <h2>Booking Request Submitted ✓</h2>
-        <div
-          style={{
-            border: '1px solid #ccc',
-            borderRadius: '8px',
-            padding: '1.5rem',
-            marginTop: '1rem',
-          }}
-        >
-          <p>
-            <strong>Status:</strong>{' '}
-            <span style={{ color: 'orange' }}>Pending</span>
-          </p>
-          <p>We will notify you when your booking is confirmed.</p>
+      <div className="max-w-xl mx-auto text-center py-16">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-5">
+          ✓
+        </div>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">
+          Booking request submitted
+        </h2>
+        <p className="text-slate-500 mb-8">
+          Your request is now{' '}
+          <span className="font-semibold text-amber-600">pending</span>. We'll
+          notify you once it's confirmed by the wellbeing team.
+        </p>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 text-sm text-amber-800 mb-8">
+          Please check your email for updates on your appointment.
         </div>
         <button
           onClick={() => navigate('/dashboard')}
-          style={{
-            marginTop: '1.5rem',
-            padding: '0.75rem 1.5rem',
-            cursor: 'pointer',
-          }}
+          className="px-8 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm transition-colors"
         >
-          Back to Dashboard
+          Back to dashboard
         </button>
       </div>
     );
   }
 
-  if (loading)
+  if (loading) {
     return (
-      <p style={{ margin: '50px auto', maxWidth: '600px' }}>
-        Loading available slots...
-      </p>
+      <div className="flex items-center justify-center py-24">
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-slate-500">Loading available slots…</p>
+        </div>
+      </div>
     );
+  }
 
   return (
-    <div style={{ maxWidth: '600px', margin: '50px auto', padding: '2rem' }}>
-      <h1>Book a Therapy Session</h1>
-      <p>Select an available slot below to request an appointment.</p>
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-900">
+          Book a Therapy Session
+        </h1>
+        <p className="text-slate-500 mt-1">
+          Select an available slot to request an appointment.
+        </p>
+      </div>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && (
+        <div className="mb-6 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
-      {/* Time of day filter */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
-        {['all', 'morning', 'afternoon', 'evening'].map((f) => (
+      {/* Filter tabs */}
+      <div className="flex gap-2 mb-6">
+        {FILTERS.map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            style={{
-              padding: '0.5rem 1rem',
-              cursor: 'pointer',
-              background: filter === f ? '#4f46e5' : '#e5e7eb',
-              color: filter === f ? 'white' : 'black',
-              border: 'none',
-              borderRadius: '4px',
-            }}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
+              filter === f
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'
+            }`}
           >
+            {f !== 'all' && <span className="mr-1.5">{TIME_ICONS[f]}</span>}
             {f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
         ))}
       </div>
 
+      {/* Slot list */}
       {filteredSlots.length === 0 ? (
-        <p>No slots available for this time period. Try a different filter.</p>
+        <div className="text-center py-16 text-slate-400">
+          <p className="text-4xl mb-3">📭</p>
+          <p className="text-sm">No slots available for this time period.</p>
+        </div>
       ) : (
-        filteredSlots.map((slot) => (
-          <div
-            key={slot.id}
-            style={{
-              border: '1px solid #ccc',
-              borderRadius: '8px',
-              padding: '1rem',
-              marginBottom: '1rem',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <div>
-              <p>
-                <strong>{slot.slot_date}</strong> at {slot.slot_time}
-              </p>
-              <p style={{ color: '#666', fontSize: '0.9rem' }}>
-                {slot.time_of_day}
-              </p>
-            </div>
-            <button
-              onClick={() => handleBook(slot.id)}
-              disabled={submitting}
-              style={{
-                padding: '0.5rem 1rem',
-                cursor: 'pointer',
-                background: '#4f46e5',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-              }}
+        <div className="space-y-3">
+          {filteredSlots.map((slot) => (
+            <div
+              key={slot.id}
+              className="bg-white border border-slate-200 rounded-xl px-5 py-4 flex items-center justify-between shadow-sm"
             >
-              {submitting ? 'Booking...' : 'Request'}
-            </button>
-          </div>
-        ))
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center text-xl">
+                  {TIME_ICONS[slot.time_of_day] || '📅'}
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-800">
+                    {formatDate(slot.slot_date)}
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    {formatTime(slot.slot_time)} ·{' '}
+                    <span className="capitalize">{slot.time_of_day}</span>
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleBook(slot.id)}
+                disabled={submitting}
+                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg transition-colors"
+              >
+                {submitting ? 'Booking…' : 'Request'}
+              </button>
+            </div>
+          ))}
+        </div>
       )}
-
-      <button
-        onClick={() => navigate('/dashboard')}
-        style={{
-          marginTop: '1rem',
-          background: 'none',
-          border: 'none',
-          color: 'blue',
-          cursor: 'pointer',
-        }}
-      >
-        ← Back to Dashboard
-      </button>
     </div>
   );
 }
