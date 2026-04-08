@@ -1,101 +1,184 @@
-<svg width="860" height="310" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif, system-ui, -apple-system, sans-serif">
+<svg width="560" height="670" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif, system-ui, -apple-system, sans-serif">
 
   <defs>
-    <filter id="card-shadow">
-      <feDropShadow dx="0" dy="1" stdDeviation="4" flood-color="#00000010"/>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="5" flood-color="#0000001a"/>
     </filter>
-    <marker id="arr" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto">
-      <path d="M0,0.5 L0,5.5 L6.5,3 Z" fill="#cbd5e1"/>
+
+    <!-- Fixed-size arrow for vertical component connections (slate) -->
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="10" refY="5"
+            orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,1 L10,5 L0,9 Z" fill="#94a3b8"/>
     </marker>
-    <marker id="arr-r" markerWidth="7" markerHeight="7" refX="1" refY="3" orient="auto">
-      <path d="M6.5,0.5 L6.5,5.5 L0,3 Z" fill="#cbd5e1"/>
+
+    <!-- Fixed-size arrow for horizontal pipeline stages (green) -->
+    <marker id="arr-g" markerWidth="10" markerHeight="10" refX="10" refY="5"
+            orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,1 L10,5 L0,9 Z" fill="#86efac"/>
     </marker>
+
+    <!-- Clip paths for coloured top accent strips -->
+    <clipPath id="clip-client">
+      <rect x="130" y="152" width="300" height="126" rx="12"/>
+    </clipPath>
+    <clipPath id="clip-server">
+      <rect x="130" y="350" width="300" height="116" rx="12"/>
+    </clipPath>
+    <clipPath id="clip-db">
+      <rect x="130" y="512" width="300" height="108" rx="12"/>
+    </clipPath>
   </defs>
 
   <!-- Background -->
-  <rect width="860" height="310" fill="#f8fafc"/>
+  <rect width="560" height="670" fill="#f8fafc"/>
 
-  <!-- ── GitHub Actions ─────────────────────────────────────── -->
-  <rect x="14" y="12" width="832" height="34" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
-  <circle cx="32" cy="29" r="7" fill="#22c55e"/>
-  <text x="32" y="33" text-anchor="middle" font-size="9" fill="white" font-weight="700">CI</text>
-  <text x="48" y="33" font-size="11" font-weight="600" fill="#15803d">GitHub Actions</text>
-  <text x="156" y="33" font-size="11" fill="#86efac">·</text>
-  <text x="164" y="33" font-size="11" fill="#4ade80">ESLint + Prettier</text>
-  <text x="287" y="33" font-size="11" fill="#86efac">·</text>
-  <text x="295" y="33" font-size="11" fill="#4ade80">Docker build &amp; health check</text>
-  <text x="490" y="33" font-size="11" fill="#86efac">·</text>
-  <text x="498" y="33" font-size="11" fill="#86efac">triggers on push / pull request</text>
+  <!-- ══════════════════════════════════════════════════════════
+       GitHub Actions — pipeline visualization
+       ══════════════════════════════════════════════════════════ -->
+  <rect x="14" y="12" width="532" height="78" rx="10"
+        fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5"/>
 
-  <!-- ── Docker Compose zone ───────────────────────────────── -->
-  <rect x="244" y="56" width="602" height="238" rx="14" fill="#f1f5f9"/>
-  <text x="545" y="74" text-anchor="middle" font-size="9.5" font-weight="600" fill="#94a3b8" letter-spacing="1">DOCKER COMPOSE</text>
+  <!-- Header row -->
+  <rect x="22" y="20" width="26" height="18" rx="5" fill="#22c55e"/>
+  <text x="35" y="33" text-anchor="middle" font-size="9" fill="white" font-weight="800">CI</text>
+  <text x="56" y="33" font-size="12" font-weight="700" fill="#15803d">GitHub Actions</text>
+  <text x="170" y="33" font-size="10" fill="#86efac">|</text>
+  <text x="178" y="33" font-size="10" fill="#4ade80">on: push  ·  pull request</text>
 
-  <!-- ── Client card ───────────────────────────────────────── -->
-  <rect x="14" y="60" width="208" height="228" rx="12" fill="white" filter="url(#card-shadow)" stroke="#e2e8f0" stroke-width="1"/>
+  <!-- Pipeline row — 4 stages with arrows -->
 
-  <text x="118" y="106" text-anchor="middle" font-size="30">🌐</text>
-  <text x="118" y="133" text-anchor="middle" font-size="16" font-weight="700" fill="#1e1b4b">Client</text>
-  <text x="118" y="152" text-anchor="middle" font-size="11" fill="#6366f1">React 19 + Vite</text>
+  <!-- Stage 1: Push / PR -->
+  <rect x="30" y="46" width="72" height="34" rx="7" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="66" y="62" text-anchor="middle" font-size="9" fill="#166534" font-weight="600">Push</text>
+  <text x="66" y="74" text-anchor="middle" font-size="9" fill="#166534" font-weight="600">/ PR</text>
 
-  <line x1="34" y1="163" x2="202" y2="163" stroke="#f1f5f9" stroke-width="1.5"/>
+  <!-- Arrow 1→2 -->
+  <line x1="104" y1="63" x2="122" y2="63" stroke="#86efac" stroke-width="1.5" marker-end="url(#arr-g)"/>
 
-  <text x="118" y="182" text-anchor="middle" font-size="10" fill="#94a3b8">Tailwind CSS  ·  React Router</text>
-  <text x="118" y="198" text-anchor="middle" font-size="10" fill="#94a3b8">JWT  ·  5 pages</text>
+  <!-- Stage 2: ESLint + Prettier -->
+  <rect x="124" y="46" width="110" height="34" rx="7" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="179" y="62" text-anchor="middle" font-size="9" fill="#166534" font-weight="600">ESLint</text>
+  <text x="179" y="74" text-anchor="middle" font-size="9" fill="#166534" font-weight="600">+ Prettier</text>
 
-  <line x1="34" y1="210" x2="202" y2="210" stroke="#f1f5f9" stroke-width="1.5"/>
+  <!-- Arrow 2→3 -->
+  <line x1="236" y1="63" x2="254" y2="63" stroke="#86efac" stroke-width="1.5" marker-end="url(#arr-g)"/>
 
-  <rect x="46" y="221" width="124" height="20" rx="10" fill="#eef2ff"/>
-  <text x="108" y="235" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="600">localhost : 5173</text>
-  <text x="118" y="260" text-anchor="middle" font-size="9" fill="#cbd5e1">not containerised</text>
+  <!-- Stage 3: Docker Build -->
+  <rect x="256" y="46" width="90" height="34" rx="7" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="301" y="62" text-anchor="middle" font-size="9" fill="#166534" font-weight="600">Docker</text>
+  <text x="301" y="74" text-anchor="middle" font-size="9" fill="#166534" font-weight="600">Build</text>
 
-  <!-- ── Arrow: Client ↔ Server ────────────────────────────── -->
-  <line x1="224" y1="164" x2="256" y2="164" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arr)"/>
-  <line x1="256" y1="178" x2="224" y2="178" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arr-r)"/>
-  <text x="240" y="160" text-anchor="middle" font-size="8.5" fill="#94a3b8">HTTP</text>
-  <text x="240" y="191" text-anchor="middle" font-size="8.5" fill="#94a3b8">JSON</text>
+  <!-- Arrow 3→4 -->
+  <line x1="348" y1="63" x2="366" y2="63" stroke="#86efac" stroke-width="1.5" marker-end="url(#arr-g)"/>
 
-  <!-- ── Server card ───────────────────────────────────────── -->
-  <rect x="260" y="78" width="248" height="208" rx="12" fill="white" filter="url(#card-shadow)" stroke="#e2e8f0" stroke-width="1"/>
+  <!-- Stage 4: Health Check -->
+  <rect x="368" y="46" width="90" height="34" rx="7" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="413" y="62" text-anchor="middle" font-size="9" fill="#166534" font-weight="600">Health</text>
+  <text x="413" y="74" text-anchor="middle" font-size="9" fill="#166534" font-weight="600">Check</text>
 
-  <text x="384" y="118" text-anchor="middle" font-size="30">⚙️</text>
-  <text x="384" y="145" text-anchor="middle" font-size="16" font-weight="700" fill="#2e1065">Server</text>
-  <text x="384" y="164" text-anchor="middle" font-size="11" fill="#7c3aed">Node.js 20 + Express 5</text>
+  <!-- Arrow 4→ pass -->
+  <line x1="460" y1="63" x2="478" y2="63" stroke="#86efac" stroke-width="1.5" marker-end="url(#arr-g)"/>
 
-  <line x1="280" y1="175" x2="488" y2="175" stroke="#f1f5f9" stroke-width="1.5"/>
+  <!-- Pass badge -->
+  <circle cx="500" cy="63" r="14" fill="#22c55e"/>
+  <text x="500" y="67" text-anchor="middle" font-size="13" fill="white" font-weight="700">✓</text>
 
-  <text x="384" y="194" text-anchor="middle" font-size="10" fill="#94a3b8">REST API  ·  JWT auth</text>
-  <text x="384" y="210" text-anchor="middle" font-size="10" fill="#94a3b8">bcrypt  ·  Role-based access</text>
-  <text x="384" y="226" text-anchor="middle" font-size="10" fill="#94a3b8">Swagger UI</text>
+  <!-- ══════════════════════════════════════════════════════════
+       User's Browser
+       ══════════════════════════════════════════════════════════ -->
+  <rect x="188" y="104" width="184" height="30" rx="15" fill="white"
+        stroke="#e2e8f0" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="280" y="123" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">User's Browser</text>
 
-  <line x1="280" y1="238" x2="488" y2="238" stroke="#f1f5f9" stroke-width="1.5"/>
+  <!-- Arrow: Browser → Client -->
+  <line x1="280" y1="134" x2="280" y2="150" stroke="#94a3b8" stroke-width="2" marker-end="url(#arr)"/>
 
-  <rect x="316" y="249" width="136" height="20" rx="10" fill="#ede9fe"/>
-  <text x="384" y="263" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="600">container : 3000</text>
+  <!-- ══════════════════════════════════════════════════════════
+       Client card
+       ══════════════════════════════════════════════════════════ -->
+  <rect x="130" y="152" width="300" height="126" rx="12" fill="white"
+        filter="url(#shadow)" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="130" y="152" width="300" height="7" fill="#6366f1" clip-path="url(#clip-client)"/>
 
-  <!-- ── Arrow: Server → Database ──────────────────────────── -->
-  <line x1="510" y1="182" x2="552" y2="182" stroke="#cbd5e1" stroke-width="1.5" marker-end="url(#arr)"/>
-  <text x="531" y="177" text-anchor="middle" font-size="8.5" fill="#94a3b8">SQL</text>
+  <text x="280" y="183" text-anchor="middle" font-size="15" font-weight="700" fill="#1e1b4b">Client</text>
+  <text x="280" y="202" text-anchor="middle" font-size="10.5" fill="#6366f1" font-weight="600">React 19 + Vite  ·  Tailwind CSS v4</text>
 
-  <!-- ── Database card ─────────────────────────────────────── -->
-  <rect x="556" y="78" width="274" height="208" rx="12" fill="white" filter="url(#card-shadow)" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="150" y1="213" x2="410" y2="213" stroke="#f1f5f9" stroke-width="1.5"/>
 
-  <text x="693" y="118" text-anchor="middle" font-size="30">🗄️</text>
-  <text x="693" y="145" text-anchor="middle" font-size="16" font-weight="700" fill="#3b0764">Database</text>
-  <text x="693" y="164" text-anchor="middle" font-size="11" fill="#9333ea">MySQL 8</text>
+  <text x="280" y="231" text-anchor="middle" font-size="9.5" fill="#94a3b8">React Router v7  ·  JWT  ·  5 pages</text>
+  <text x="280" y="248" text-anchor="middle" font-size="9.5" fill="#94a3b8">Vite dev server proxy → :3000</text>
 
-  <line x1="576" y1="175" x2="810" y2="175" stroke="#f1f5f9" stroke-width="1.5"/>
+  <rect x="190" y="257" width="180" height="18" rx="9" fill="#eef2ff"/>
+  <text x="280" y="270" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="700">localhost : 5173  (not containerised)</text>
 
-  <text x="693" y="194" text-anchor="middle" font-size="10" fill="#94a3b8">6 tables  ·  FK constraints</text>
-  <text x="693" y="210" text-anchor="middle" font-size="10" fill="#94a3b8">Parameterised queries</text>
-  <text x="693" y="226" text-anchor="middle" font-size="10" fill="#94a3b8">Persistent named volume</text>
+  <!-- ══════════════════════════════════════════════════════════
+       Bidirectional arrows  Client ↔ Server
+       ══════════════════════════════════════════════════════════ -->
 
-  <line x1="576" y1="238" x2="810" y2="238" stroke="#f1f5f9" stroke-width="1.5"/>
+  <!-- Down: HTTP request -->
+  <line x1="296" y1="280" x2="296" y2="348" stroke="#94a3b8" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- Up: JSON response -->
+  <line x1="264" y1="348" x2="264" y2="280" stroke="#94a3b8" stroke-width="2" marker-end="url(#arr)"/>
 
-  <rect x="625" y="249" width="136" height="20" rx="10" fill="#f3e8ff"/>
-  <text x="693" y="263" text-anchor="middle" font-size="9" fill="#6b21a8" font-weight="600">container : 3306</text>
+  <!-- Arrow labels -->
+  <text x="304" y="318" font-size="9" fill="#64748b" font-weight="600">HTTP /api/*</text>
+  <text x="256" y="318" font-size="9" fill="#64748b" text-anchor="end">JSON + JWT</text>
 
-  <!-- ── Footer ─────────────────────────────────────────────── -->
-  <text x="14" y="298" font-size="9" fill="#cbd5e1">MindSpace · System Architecture · SEN5002 Agile Development and DevOps</text>
+  <!-- ══════════════════════════════════════════════════════════
+       Docker Compose zone
+       ══════════════════════════════════════════════════════════ -->
+  <rect x="76" y="326" width="408" height="318" rx="14" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="280" y="344" text-anchor="middle" font-size="9" font-weight="700"
+        fill="#94a3b8" letter-spacing="1.5">DOCKER COMPOSE</text>
+
+  <!-- ══════════════════════════════════════════════════════════
+       Server card
+       ══════════════════════════════════════════════════════════ -->
+  <rect x="130" y="350" width="300" height="116" rx="12" fill="white"
+        filter="url(#shadow)" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="130" y="350" width="300" height="7" fill="#7c3aed" clip-path="url(#clip-server)"/>
+
+  <text x="280" y="381" text-anchor="middle" font-size="15" font-weight="700" fill="#2e1065">Server</text>
+  <text x="280" y="400" text-anchor="middle" font-size="10.5" fill="#7c3aed" font-weight="600">Node.js 20 + Express 5</text>
+
+  <line x1="150" y1="411" x2="410" y2="411" stroke="#f1f5f9" stroke-width="1.5"/>
+
+  <text x="280" y="429" text-anchor="middle" font-size="9.5" fill="#94a3b8">REST API  ·  JWT auth  ·  bcrypt  ·  RBAC</text>
+  <text x="280" y="446" text-anchor="middle" font-size="9.5" fill="#94a3b8">Input validation  ·  Swagger UI</text>
+
+  <rect x="192" y="454" width="176" height="18" rx="9" fill="#ede9fe"/>
+  <text x="280" y="467" text-anchor="middle" font-size="9" fill="#5b21b6" font-weight="700">container : 3000</text>
+
+  <!-- ══════════════════════════════════════════════════════════
+       Bidirectional arrows  Server ↔ Database
+       ══════════════════════════════════════════════════════════ -->
+
+  <!-- Down: SQL query -->
+  <line x1="296" y1="470" x2="296" y2="510" stroke="#94a3b8" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- Up: result set -->
+  <line x1="264" y1="510" x2="264" y2="470" stroke="#94a3b8" stroke-width="2" marker-end="url(#arr)"/>
+
+  <text x="304" y="494" font-size="9" fill="#64748b" font-weight="600">SQL query</text>
+  <text x="256" y="494" font-size="9" fill="#64748b" text-anchor="end">result set</text>
+
+  <!-- ══════════════════════════════════════════════════════════
+       Database card
+       ══════════════════════════════════════════════════════════ -->
+  <rect x="130" y="512" width="300" height="108" rx="12" fill="white"
+        filter="url(#shadow)" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="130" y="512" width="300" height="7" fill="#9333ea" clip-path="url(#clip-db)"/>
+
+  <text x="280" y="543" text-anchor="middle" font-size="15" font-weight="700" fill="#3b0764">Database</text>
+  <text x="280" y="562" text-anchor="middle" font-size="10.5" fill="#9333ea" font-weight="600">MySQL 8</text>
+
+  <line x1="150" y1="573" x2="410" y2="573" stroke="#f1f5f9" stroke-width="1.5"/>
+
+  <text x="280" y="591" text-anchor="middle" font-size="9.5" fill="#94a3b8">6 tables  ·  FK constraints  ·  Named volume</text>
+
+  <rect x="192" y="600" width="176" height="18" rx="9" fill="#f3e8ff"/>
+  <text x="280" y="613" text-anchor="middle" font-size="9" fill="#6b21a8" font-weight="700">container : 3306</text>
+
+  <!-- Footer -->
+  <text x="14" y="658" font-size="9" fill="#cbd5e1">MindSpace · System Architecture · SEN5002 Agile Development and DevOps</text>
 
 </svg>
