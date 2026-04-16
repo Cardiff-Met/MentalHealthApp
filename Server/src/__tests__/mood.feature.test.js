@@ -64,8 +64,8 @@ describe('Feature: User Registration (POST /api/auth/register)', () => {
 
   test('✓ registers a new user and returns an access token', async () => {
     db.query
-      .mockResolvedValueOnce([[]])                          // no existing user
-      .mockResolvedValueOnce([{ insertId: 1 }]);            // INSERT result
+      .mockResolvedValueOnce([[]]) // no existing user
+      .mockResolvedValueOnce([{ insertId: 1 }]); // INSERT result
     bcrypt.hash.mockResolvedValue('hashed-password');
 
     const res = await request(app).post('/api/auth/register').send({
@@ -119,9 +119,9 @@ describe('Feature: User Login (POST /api/auth/login)', () => {
   beforeEach(() => jest.clearAllMocks());
 
   test('✓ logs in with correct credentials and returns an access token', async () => {
-    db.query.mockResolvedValueOnce([[
-      { id: 1, email: 'student@cardiffmet.ac.uk', password: 'hashed-password', role: 'user' },
-    ]]);
+    db.query.mockResolvedValueOnce([
+      [{ id: 1, email: 'student@cardiffmet.ac.uk', password: 'hashed-password', role: 'user' }],
+    ]);
     bcrypt.compare.mockResolvedValue(true);
 
     const res = await request(app).post('/api/auth/login').send({
@@ -135,9 +135,9 @@ describe('Feature: User Login (POST /api/auth/login)', () => {
   });
 
   test('✗ rejects login with a wrong password', async () => {
-    db.query.mockResolvedValueOnce([[
-      { id: 1, email: 'student@cardiffmet.ac.uk', password: 'hashed-password', role: 'user' },
-    ]]);
+    db.query.mockResolvedValueOnce([
+      [{ id: 1, email: 'student@cardiffmet.ac.uk', password: 'hashed-password', role: 'user' }],
+    ]);
     bcrypt.compare.mockResolvedValue(false);
 
     const res = await request(app).post('/api/auth/login').send({
@@ -172,8 +172,8 @@ describe('Feature: Mood Logging (POST /api/mood)', () => {
 
   test('✓ logs a valid mood and returns personalised resources', async () => {
     db.query
-      .mockResolvedValueOnce([{ affectedRows: 1 }])   // INSERT mood_log
-      .mockResolvedValueOnce([SAMPLE_RESOURCES]);      // SELECT resources
+      .mockResolvedValueOnce([{ affectedRows: 1 }]) // INSERT mood_log
+      .mockResolvedValueOnce([SAMPLE_RESOURCES]); // SELECT resources
 
     const res = await request(app)
       .post('/api/mood')
@@ -189,7 +189,9 @@ describe('Feature: Mood Logging (POST /api/mood)', () => {
   test('✓ triggers crisis flag when mood rating is 1', async () => {
     db.query
       .mockResolvedValueOnce([{ affectedRows: 1 }])
-      .mockResolvedValueOnce([[{ id: 3, title: 'Samaritans — 116 123', min_mood: 1, max_mood: 1 }]]);
+      .mockResolvedValueOnce([
+        [{ id: 3, title: 'Samaritans — 116 123', min_mood: 1, max_mood: 1 }],
+      ]);
 
     const res = await request(app)
       .post('/api/mood')
@@ -197,7 +199,7 @@ describe('Feature: Mood Logging (POST /api/mood)', () => {
       .send({ rating: 1 });
 
     expect(res.status).toBe(201);
-    expect(res.body.isCrisis).toBe(true);  // crisis panel must be triggered
+    expect(res.body.isCrisis).toBe(true); // crisis panel must be triggered
   });
 
   test('✗ rejects mood log with no auth token — returns 401', async () => {
