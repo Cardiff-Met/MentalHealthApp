@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../db/connection');
+const { isValidEmail, isValidPassword } = require('../utils/validation');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const REFRESH_SECRET = process.env.REFRESH_SECRET;
@@ -22,12 +23,11 @@ async function register(req, res) {
     return res.status(400).json({ error: 'Email and password are required.' });
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
+  if (!isValidEmail(email)) {
     return res.status(400).json({ error: 'Invalid email format.' });
   }
 
-  if (password.length < 8) {
+  if (!isValidPassword(password)) {
     return res.status(400).json({ error: 'Password must be at least 8 characters.' });
   }
 
@@ -43,7 +43,7 @@ async function register(req, res) {
       hashedPassword,
     ]);
 
-    const payload = { userId: result.insertId, email };
+    const payload = { userId: result.insertId, email, role: 'user' };
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload);
 
@@ -84,7 +84,7 @@ async function login(req, res) {
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    const payload = { userId: user.id, email: user.email };
+    const payload = { userId: user.id, email: user.email, role: user.role };
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload);
 

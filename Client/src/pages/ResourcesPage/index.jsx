@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context';
 
 export default function ResourcesPage() {
@@ -9,7 +8,6 @@ export default function ResourcesPage() {
   const [saved, setSaved] = useState([]);
 
   const { authFetch } = useAuth();
-  const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchResources() {
@@ -35,63 +33,76 @@ export default function ResourcesPage() {
     setSaved([...saved, id]);
   }
 
-  if (loading)
+  if (loading) {
     return (
-      <p style={{ margin: '50px auto', maxWidth: '600px' }}>
-        Loading resources...
-      </p>
+      <div className="flex items-center justify-center py-24">
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-slate-500">Loading resources…</p>
+        </div>
+      </div>
     );
+  }
 
   return (
-    <div style={{ maxWidth: '600px', margin: '50px auto', padding: '2rem' }}>
-      <h1>Mental Health Resources</h1>
-      <p>Browse resources below. All are free and confidential.</p>
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-900">
+          Mental Health Resources
+        </h1>
+        <p className="text-slate-500 mt-1">
+          All resources are free and confidential.
+        </p>
+      </div>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      {resources.map((resource) => (
-        <div
-          key={resource.id}
-          style={{
-            border: '1px solid #ccc',
-            borderRadius: '8px',
-            padding: '1rem',
-            marginBottom: '1rem',
-          }}
-        >
-          <h3>{resource.title}</h3>
-          <p>{resource.description}</p>
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-            <a href={resource.url} target="_blank" rel="noreferrer">
-              Visit resource →
-            </a>
-            <button
-              onClick={() => handleSave(resource.id)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: saved.includes(resource.id) ? 'gray' : 'blue',
-                cursor: 'pointer',
-              }}
-            >
-              {saved.includes(resource.id) ? '✓ Saved' : 'Save'}
-            </button>
-          </div>
+      {error && (
+        <div className="mb-6 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
         </div>
-      ))}
+      )}
 
-      <button
-        onClick={() => navigate('/dashboard')}
-        style={{
-          marginTop: '1rem',
-          background: 'none',
-          border: 'none',
-          color: 'blue',
-          cursor: 'pointer',
-        }}
-      >
-        ← Back to Dashboard
-      </button>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {resources.map((resource) => (
+          <div
+            key={resource.id}
+            className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col"
+          >
+            <h3 className="font-semibold text-slate-800 text-base mb-2">
+              {resource.title}
+            </h3>
+            <p className="text-sm text-slate-500 flex-1 mb-4">
+              {resource.description}
+            </p>
+
+            <div className="flex items-center gap-3">
+              <a
+                href={resource.url}
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 text-center py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors"
+              >
+                Visit resource
+              </a>
+              <button
+                onClick={() => handleSave(resource.id)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                  saved.includes(resource.id)
+                    ? 'border-green-300 bg-green-50 text-green-700'
+                    : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400'
+                }`}
+              >
+                {saved.includes(resource.id) ? '✓ Saved' : 'Save'}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {resources.length === 0 && !error && (
+        <p className="text-center text-slate-400 py-16">
+          No resources available right now.
+        </p>
+      )}
     </div>
   );
 }
