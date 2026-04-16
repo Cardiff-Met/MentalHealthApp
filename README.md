@@ -2,8 +2,8 @@
 
 A full-stack web application providing personalized mental health support for Cardiff Met students, built as part of SEN5002 Agile Development and DevOps.
 
-[![Code Quality Checks](https://github.com/YOUR_USERNAME/MentalHealthApp/actions/workflows/code-quality.yml/badge.svg)](https://github.com/YOUR_USERNAME/MentalHealthApp/actions)
-[![Docker Build & Test](https://github.com/YOUR_USERNAME/MentalHealthApp/actions/workflows/docker-test.yml/badge.svg)](https://github.com/YOUR_USERNAME/MentalHealthApp/actions)
+[![Code Quality Checks](https://github.com/Cardiff-Met/MentalHealthApp/actions/workflows/code-quality.yml/badge.svg)](https://github.com/Cardiff-Met/MentalHealthApp/actions)
+[![Docker Build & Test](https://github.com/Cardiff-Met/MentalHealthApp/actions/workflows/docker-test.yml/badge.svg)](https://github.com/Cardiff-Met/MentalHealthApp/actions)
 
 ---
 
@@ -50,7 +50,7 @@ A full-stack web application providing personalized mental health support for Ca
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/MentalHealthApp.git
+git clone git@github.com:Cardiff-Met/MentalHealthApp.git
 cd MentalHealthApp
 ```
 
@@ -208,35 +208,51 @@ docker compose logs db
 
 ---
 
-## 🧪 Testing & CI/CD
+## 🧪 Testing
 
-### Automated Checks (GitHub Actions)
+### Run the unit and functional test suite
 
-Every push triggers automated checks:
+```bash
+cd Server
+npm test
+```
 
-✅ **Code Quality** - ESLint checks on Client & Server  
-✅ **Formatting** - Prettier checks on Client & Server  
-✅ **Docker Build** - Verifies containers build and run  
-✅ **Security** - npm audit for vulnerabilities (weekly)
+Expected output:
+```
+Test Suites: 4 passed, 4 total
+Tests:       50 passed, 50 total
+```
+
+### Run tests inside Docker (matches CI environment)
+
+```bash
+docker compose run --rm server npm test
+```
+
+### Test suite overview
+
+| Suite | Tests | What it covers |
+|-------|-------|---------------|
+| `validation.test.js` | 21 | Unit tests — email, password, mood rating validators (TDD) |
+| `auth.middleware.test.js` | 8 | Unit tests — JWT authentication middleware |
+| `requireAdmin.middleware.test.js` | 5 | Unit tests — admin role middleware |
+| `mood.feature.test.js` | 17 | **Functional tests** — Register → Login → Log Mood → Resources pathway |
+| **Total** | **50** | |
+
+The functional tests (`mood.feature.test.js`) use **supertest** to send real HTTP requests through the full Express middleware stack. The database and bcrypt are mocked for reproducibility — tests run without a live MySQL instance.
+
+---
+
+## ⚙️ CI/CD (GitHub Actions)
+
+Every push and pull request triggers:
+
+✅ **Code Quality** — ESLint + Prettier checks on Client & Server  
+✅ **Docker Build & Health Check** — builds the server image and verifies `/health` responds
 
 View results in the **Actions** tab on GitHub.
 
-### Running Checks Locally
-
-```bash
-# Lint checks
-cd Client && npm run lint
-cd ../Server && npm run lint
-
-# Format checks
-cd Client && npm run format:check
-cd ../Server && npm run format:check
-
-# Docker test
-docker compose up --build
-```
-
-See [GITHUB_ACTIONS.md](./docs/GithubActions.md) for details.
+See [GitHub Actions Guide](./docs/GithubActions.md) for details.
 
 ---
 
@@ -354,6 +370,7 @@ npm run format:check  # Check if code is formatted
 ```bash
 npm start             # Start production server
 npm run dev           # Start with nodemon (auto-reload)
+npm test              # Run all 50 unit + functional tests
 npm run lint          # Check for lint errors
 npm run lint:fix      # Auto-fix lint errors
 npm run format        # Format code with Prettier
