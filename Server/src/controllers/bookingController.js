@@ -76,4 +76,45 @@ async function getMyBookings(req, res) {
   }
 }
 
-module.exports = { getSlots, createBooking, getMyBookings };
+// DELETE /api/booking/:id
+async function cancelBooking(req, res) {
+  const bookingId = parseInt(req.params.id, 10);
+  const userId = req.user.userId;
+
+  try {
+    // Fetch booking and verify ownership
+    const [rows] = await db.query(
+      'SELECT b.id, b.status, b.slot_id FROM bookings b WHERE b.id = ? AND b.user_id = ?',
+      [bookingId, userId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found.' });
+    }
+
+    const booking = rows[0];
+
+    if (booking.status === 'confirmed') {
+      return res
+        .status(409)
+        .json({
+          error: 'Confirmed bookings cannot be cancelled. Please contact the wellbeing team.',
+        });
+    }
+
+    if (booking.status === 'declined') {
+      return res.status(409).json({ error: 'This booking has already been declined.' });
+    }
+
+    // Delete booking and restore slot to available
+    await db.query('DELETE FROM bookings WHERE id = ?', [bookingId]);
+    await db.query('UPDATE therapy_slots SET status = "available" WHERE id = ?', [booking.slot_id]);
+
+    res.json({ message: 'Booking cancelled.' });
+  } catch (err) {
+    console.error('Cancel booking error:', err);
+    res.status(500).json({ error: 'Failed to cancel booking. Please try again.' });
+  }
+}
+
+module.exports = { getSlots, createBooking, getMyBookings, cancelBooking };
