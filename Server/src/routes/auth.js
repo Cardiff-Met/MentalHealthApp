@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { register, login, refresh, logout } = require('../controllers/authController');
+const { forgotPassword, resetPassword } = require('../controllers/passwordResetController');
 
 /**
  * @swagger
@@ -87,5 +88,62 @@ router.post('/refresh', refresh);
  *         description: Logged out successfully
  */
 router.post('/logout', logout);
+
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Request a password reset link
+ *     description: >
+ *       Generates a reset token and logs the link to the server console.
+ *       Always returns 200 to prevent email enumeration.
+ *       In production this would send an email via SendGrid/SES.
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: student@cardiffmet.ac.uk
+ *     responses:
+ *       200:
+ *         description: Reset link sent (or silently ignored if email not found)
+ *       400:
+ *         description: Email field missing
+ */
+router.post('/forgot-password', forgotPassword);
+
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     summary: Reset password using a valid token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [token, newPassword]
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 example: abc123def456...
+ *               newPassword:
+ *                 type: string
+ *                 example: NewSecurePass1
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ *       400:
+ *         description: Missing fields, invalid token, expired token, or token already used
+ */
+router.post('/reset-password', resetPassword);
 
 module.exports = router;
