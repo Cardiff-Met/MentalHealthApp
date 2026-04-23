@@ -70,7 +70,7 @@ describe('Feature: User Registration (POST /api/auth/register)', () => {
 
     const res = await request(app).post('/api/auth/register').send({
       email: 'student@cardiffmet.ac.uk',
-      password: 'securepass',
+      password: 'Securepass1',
     });
 
     expect(res.status).toBe(201);
@@ -81,7 +81,7 @@ describe('Feature: User Registration (POST /api/auth/register)', () => {
   test('✗ rejects registration with an invalid email format', async () => {
     const res = await request(app).post('/api/auth/register').send({
       email: 'not-an-email',
-      password: 'securepass',
+      password: 'Securepass1',
     });
 
     expect(res.status).toBe(400);
@@ -103,7 +103,7 @@ describe('Feature: User Registration (POST /api/auth/register)', () => {
 
     const res = await request(app).post('/api/auth/register').send({
       email: 'student@cardiffmet.ac.uk',
-      password: 'securepass',
+      password: 'Securepass1',
     });
 
     expect(res.status).toBe(409);
@@ -126,7 +126,7 @@ describe('Feature: User Login (POST /api/auth/login)', () => {
 
     const res = await request(app).post('/api/auth/login').send({
       email: 'student@cardiffmet.ac.uk',
-      password: 'securepass',
+      password: 'Securepass1',
     });
 
     expect(res.status).toBe(200);
@@ -142,7 +142,7 @@ describe('Feature: User Login (POST /api/auth/login)', () => {
 
     const res = await request(app).post('/api/auth/login').send({
       email: 'student@cardiffmet.ac.uk',
-      password: 'wrongpassword',
+      password: 'Wrongpass1',
     });
 
     expect(res.status).toBe(401);
@@ -155,7 +155,7 @@ describe('Feature: User Login (POST /api/auth/login)', () => {
 
     const res = await request(app).post('/api/auth/login').send({
       email: 'nobody@cardiffmet.ac.uk',
-      password: 'securepass',
+      password: 'Securepass1',
     });
 
     expect(res.status).toBe(401);
