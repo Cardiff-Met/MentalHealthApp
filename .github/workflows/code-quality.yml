@@ -68,8 +68,8 @@ jobs:
         run: npm test -- --coverage --coverageReporters=text --coverageReporters=lcov
         working-directory: ./Server
         env:
-          JWT_SECRET: test-jwt-secret-for-ci
-          REFRESH_SECRET: test-refresh-secret-for-ci
+          JWT_SECRET: ci-jwt-secret-value-that-is-long-enough-here
+          REFRESH_SECRET: ci-refresh-secret-value-that-is-long-enough
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
