@@ -10,6 +10,7 @@ const moodRoutes = require('./routes/mood');
 const resourcesRoutes = require('./routes/resources');
 const bookingRoutes = require('./routes/booking');
 const adminRoutes = require('./routes/admin');
+const userRoutes = require('./routes/users');
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use('/api/mood', moodRoutes);
 app.use('/api/resources', resourcesRoutes);
 app.use('/api/booking', bookingRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/users', userRoutes);
 
 // 404 handler
 app.use((req, res) => {

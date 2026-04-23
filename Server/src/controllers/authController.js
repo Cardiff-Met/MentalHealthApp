@@ -71,7 +71,9 @@ async function login(req, res) {
   }
 
   try {
-    const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+    const [rows] = await db.query('SELECT * FROM users WHERE email = ? AND deleted_at IS NULL', [
+      email,
+    ]);
 
     if (rows.length === 0) {
       return res.status(401).json({ error: 'Invalid email or password.' });
