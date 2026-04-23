@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS resources (
   title       VARCHAR(255) NOT NULL,
   description TEXT,
   url         VARCHAR(500),
+  category    VARCHAR(50) DEFAULT 'general',
   min_mood    TINYINT DEFAULT 1,
   max_mood    TINYINT DEFAULT 5,
   created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -96,15 +97,15 @@ CREATE TABLE IF NOT EXISTS audit_log (
 );
 
 -- Seed resources
-INSERT INTO resources (title, description, url, min_mood, max_mood) VALUES
-  ('Crisis Support – Samaritans',      'Free confidential support. Call 116 123 anytime.',          'https://www.samaritans.org',             1, 1),
-  ('NHS Urgent Mental Health Support', 'Call 111 and select option 2 for urgent support.',           'https://www.nhs.uk/mental-health',       1, 2),
-  ('Student Minds – Managing Stress',  'Practical tips for managing stress during exam periods.',    'https://www.studentminds.org.uk',        2, 3),
-  ('Calm – Breathing Exercises',       'Guided breathing and mindfulness to reduce anxiety.',        'https://www.calm.com',                   2, 4),
-  ('Cardiff Met Wellbeing Services',   'Book an appointment with the university wellbeing team.',    'https://www.cardiffmet.ac.uk/wellbeing', 1, 5),
-  ('MoodGym – Self-Help CBT',          'Free online cognitive behavioural therapy exercises.',       'https://moodgym.com.au',                 3, 5),
-  ('NHS – Sleep and Tiredness Tips',   'Advice on improving sleep quality and managing fatigue.',    'https://www.nhs.uk/live-well/sleep',     3, 5),
-  ('Headspace – Meditation',           'Guided meditation for stress relief and improved focus.',    'https://www.headspace.com',              4, 5);
+INSERT INTO resources (title, description, url, category, min_mood, max_mood) VALUES
+  ('Crisis Support – Samaritans',      'Free confidential support. Call 116 123 anytime.',          'https://www.samaritans.org',             'crisis',      1, 1),
+  ('NHS Urgent Mental Health Support', 'Call 111 and select option 2 for urgent support.',           'https://www.nhs.uk/mental-health',       'crisis',      1, 2),
+  ('Student Minds – Managing Stress',  'Practical tips for managing stress during exam periods.',    'https://www.studentminds.org.uk',        'anxiety',     2, 3),
+  ('Calm – Breathing Exercises',       'Guided breathing and mindfulness to reduce anxiety.',        'https://www.calm.com',                   'anxiety',     2, 4),
+  ('Cardiff Met Wellbeing Services',   'Book an appointment with the university wellbeing team.',    'https://www.cardiffmet.ac.uk/wellbeing', 'general',     1, 5),
+  ('MoodGym – Self-Help CBT',          'Free online cognitive behavioural therapy exercises.',       'https://moodgym.com.au',                 'self-help',   3, 5),
+  ('NHS – Sleep and Tiredness Tips',   'Advice on improving sleep quality and managing fatigue.',    'https://www.nhs.uk/live-well/sleep',     'self-help',   3, 5),
+  ('Headspace – Meditation',           'Guided meditation for stress relief and improved focus.',    'https://www.headspace.com',              'mindfulness', 4, 5);
 
 -- Seed admin user (password: Admin1234! — bcrypt hash, 10 rounds)
 INSERT IGNORE INTO users (email, password, role) VALUES
