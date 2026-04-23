@@ -6,72 +6,106 @@ USE mental_health_app;
 
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
-                                     id         INT AUTO_INCREMENT PRIMARY KEY,
-                                     email      VARCHAR(255) NOT NULL UNIQUE,
-    password   VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  email      VARCHAR(255) NOT NULL UNIQUE,
+  password   VARCHAR(255) NOT NULL,
+  role       ENUM('user', 'admin') NOT NULL DEFAULT 'user',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP NULL DEFAULT NULL
+);
 
 -- Mood logs table
 CREATE TABLE IF NOT EXISTS mood_logs (
-                                         id          INT AUTO_INCREMENT PRIMARY KEY,
-                                         user_id     INT NOT NULL,
-                                         rating      TINYINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
-    description TEXT,
-    logged_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    );
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  user_id     INT NOT NULL,
+  rating      TINYINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  description TEXT,
+  logged_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
 
 -- Resources table
 CREATE TABLE IF NOT EXISTS resources (
-                                         id          INT AUTO_INCREMENT PRIMARY KEY,
-                                         title       VARCHAR(255) NOT NULL,
-    description TEXT,
-    url         VARCHAR(500),
-    min_mood    TINYINT DEFAULT 1,
-    max_mood    TINYINT DEFAULT 5,
-    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  title       VARCHAR(255) NOT NULL,
+  description TEXT,
+  url         VARCHAR(500),
+  min_mood    TINYINT DEFAULT 1,
+  max_mood    TINYINT DEFAULT 5,
+  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 -- Saved resources
 CREATE TABLE IF NOT EXISTS saved_resources (
-                                               id          INT AUTO_INCREMENT PRIMARY KEY,
-                                               user_id     INT NOT NULL,
-                                               resource_id INT NOT NULL,
-                                               saved_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                               UNIQUE KEY unique_save (user_id, resource_id),
-    FOREIGN KEY (user_id)     REFERENCES users(id)     ON DELETE CASCADE,
-    FOREIGN KEY (resource_id) REFERENCES resources(id) ON DELETE CASCADE
-    );
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  user_id     INT NOT NULL,
+  resource_id INT NOT NULL,
+  saved_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_save (user_id, resource_id),
+  FOREIGN KEY (user_id)     REFERENCES users(id)     ON DELETE CASCADE,
+  FOREIGN KEY (resource_id) REFERENCES resources(id) ON DELETE CASCADE
+);
 
 -- Therapy slots
 CREATE TABLE IF NOT EXISTS therapy_slots (
-                                             id          INT AUTO_INCREMENT PRIMARY KEY,
-                                             slot_date   DATE NOT NULL,
-                                             slot_time   TIME NOT NULL,
-                                             time_of_day ENUM('morning', 'afternoon', 'evening') NOT NULL,
-    status      ENUM('available', 'pending', 'confirmed') DEFAULT 'available'
-    );
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  slot_date   DATE NOT NULL,
+  slot_time   TIME NOT NULL,
+  time_of_day ENUM('morning', 'afternoon', 'evening') NOT NULL,
+  status      ENUM('available', 'pending', 'confirmed') DEFAULT 'available'
+);
 
 -- Bookings
 CREATE TABLE IF NOT EXISTS bookings (
-                                        id         INT AUTO_INCREMENT PRIMARY KEY,
-                                        user_id    INT NOT NULL,
-                                        slot_id    INT NOT NULL,
-                                        status     ENUM('pending', 'confirmed', 'declined') DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (slot_id) REFERENCES therapy_slots(id) ON DELETE CASCADE
-    );
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  user_id    INT NOT NULL,
+  slot_id    INT NOT NULL,
+  status     ENUM('pending', 'confirmed', 'declined') DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (slot_id) REFERENCES therapy_slots(id) ON DELETE CASCADE
+);
+
+-- Password resets (token stored as hash — never plain text)
+CREATE TABLE IF NOT EXISTS password_resets (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  user_id    INT NOT NULL,
+  token_hash VARCHAR(255) NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  used_at    TIMESTAMP NULL DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_token_hash (token_hash),
+  INDEX idx_user_expires (user_id, expires_at)
+);
+
+-- Audit log (append-only — no UPDATE or DELETE on this table)
+CREATE TABLE IF NOT EXISTS audit_log (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  user_id    INT NULL,
+  action     VARCHAR(100) NOT NULL,
+  ip         VARCHAR(45)  NULL,
+  user_agent TEXT         NULL,
+  metadata   JSON         NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  INDEX idx_user_id   (user_id),
+  INDEX idx_action    (action),
+  INDEX idx_created   (created_at)
+);
 
 -- Seed resources
 INSERT INTO resources (title, description, url, min_mood, max_mood) VALUES
-                                                                        ('Crisis Support – Samaritans',      'Free confidential support. Call 116 123 anytime.',          'https://www.samaritans.org',             1, 1),
-                                                                        ('NHS Urgent Mental Health Support', 'Call 111 and select option 2 for urgent support.',           'https://www.nhs.uk/mental-health',       1, 2),
-                                                                        ('Student Minds – Managing Stress',  'Practical tips for managing stress during exam periods.',    'https://www.studentminds.org.uk',        2, 3),
-                                                                        ('Calm – Breathing Exercises',       'Guided breathing and mindfulness to reduce anxiety.',        'https://www.calm.com',                   2, 4),
-                                                                        ('Cardiff Met Wellbeing Services',   'Book an appointment with the university wellbeing team.',    'https://www.cardiffmet.ac.uk/wellbeing', 1, 5),
-                                                                        ('MoodGym – Self-Help CBT',          'Free online cognitive behavioural therapy exercises.',       'https://moodgym.com.au',                 3, 5),
-                                                                        ('NHS – Sleep and Tiredness Tips',   'Advice on improving sleep quality and managing fatigue.',    'https://www.nhs.uk/live-well/sleep',     3, 5),
-                                                                        ('Headspace – Meditation',           'Guided meditation for stress relief and improved focus.',    'https://www.headspace.com',              4, 5);
+  ('Crisis Support – Samaritans',      'Free confidential support. Call 116 123 anytime.',          'https://www.samaritans.org',             1, 1),
+  ('NHS Urgent Mental Health Support', 'Call 111 and select option 2 for urgent support.',           'https://www.nhs.uk/mental-health',       1, 2),
+  ('Student Minds – Managing Stress',  'Practical tips for managing stress during exam periods.',    'https://www.studentminds.org.uk',        2, 3),
+  ('Calm – Breathing Exercises',       'Guided breathing and mindfulness to reduce anxiety.',        'https://www.calm.com',                   2, 4),
+  ('Cardiff Met Wellbeing Services',   'Book an appointment with the university wellbeing team.',    'https://www.cardiffmet.ac.uk/wellbeing', 1, 5),
+  ('MoodGym – Self-Help CBT',          'Free online cognitive behavioural therapy exercises.',       'https://moodgym.com.au',                 3, 5),
+  ('NHS – Sleep and Tiredness Tips',   'Advice on improving sleep quality and managing fatigue.',    'https://www.nhs.uk/live-well/sleep',     3, 5),
+  ('Headspace – Meditation',           'Guided meditation for stress relief and improved focus.',    'https://www.headspace.com',              4, 5);
+
+-- Seed admin user (password: Admin1234! — bcrypt hash, 10 rounds)
+INSERT IGNORE INTO users (email, password, role) VALUES
+  ('admin@cardiffmet.ac.uk', '$2b$10$9z47CH5TqyvEOq0zC3f7NOQKV6adjALvgrhL2YO/jS1TqzlijBOp6', 'admin');
