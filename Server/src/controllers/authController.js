@@ -115,7 +115,7 @@ async function refresh(req, res) {
   }
 
   try {
-    const decoded = jwt.verify(refreshToken, REFRESH_SECRET);
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET);
     const accessToken = generateAccessToken({ userId: decoded.userId, email: decoded.email });
     res.json({ accessToken });
   } catch {
