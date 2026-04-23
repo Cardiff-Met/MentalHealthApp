@@ -51,10 +51,9 @@ async function updateProfile(req, res) {
       req.user.userId,
     ]);
 
-    const [rows] = await db.query(
-      'SELECT id, email, role, created_at FROM users WHERE id = ?',
-      [req.user.userId]
-    );
+    const [rows] = await db.query('SELECT id, email, role, created_at FROM users WHERE id = ?', [
+      req.user.userId,
+    ]);
 
     res.json({ message: 'Profile updated.', user: rows[0] });
   } catch (err) {
@@ -127,9 +126,7 @@ async function deleteAccount(req, res) {
     await db.query('UPDATE users SET deleted_at = NOW() WHERE id = ?', [req.user.userId]);
 
     // Anonymise mood log descriptions (GDPR — remove personal content)
-    await db.query('UPDATE mood_logs SET description = NULL WHERE user_id = ?', [
-      req.user.userId,
-    ]);
+    await db.query('UPDATE mood_logs SET description = NULL WHERE user_id = ?', [req.user.userId]);
 
     // Clear refresh token cookie
     res.clearCookie('refreshToken');
