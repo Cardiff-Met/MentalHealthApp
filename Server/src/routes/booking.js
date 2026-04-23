@@ -1,7 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const authenticateToken = require('../middleware/auth');
-const { getSlots, createBooking, getMyBookings } = require('../controllers/bookingController');
+const {
+  getSlots,
+  createBooking,
+  getMyBookings,
+  cancelBooking,
+} = require('../controllers/bookingController');
 
 router.use(authenticateToken);
 
@@ -65,5 +70,35 @@ router.get('/my', getMyBookings);
  *         description: Unauthorised
  */
 router.post('/', createBooking);
+
+/**
+ * @swagger
+ * /api/booking/{id}:
+ *   delete:
+ *     summary: Cancel a pending booking
+ *     description: >
+ *       Cancels the booking and restores the therapy slot to available.
+ *       Only the booking owner can cancel. Confirmed bookings cannot be cancelled.
+ *     tags: [Booking]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Booking ID to cancel
+ *     responses:
+ *       200:
+ *         description: Booking cancelled and slot restored
+ *       404:
+ *         description: Booking not found or not owned by user
+ *       409:
+ *         description: Booking is confirmed or already declined — cannot cancel
+ *       401:
+ *         description: Unauthorised
+ */
+router.delete('/:id', cancelBooking);
 
 module.exports = router;
