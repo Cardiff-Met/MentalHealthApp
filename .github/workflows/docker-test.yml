@@ -25,8 +25,8 @@ jobs:
           echo "DB_USER=root" >> server/.env
           echo "DB_PASSWORD=root1234" >> server/.env
           echo "DB_NAME=mental_health_app" >> server/.env
-          echo "JWT_SECRET=test-jwt-secret-for-ci" >> server/.env
-          echo "REFRESH_SECRET=test-refresh-secret-for-ci" >> server/.env
+          echo "JWT_SECRET=ci-jwt-secret-value-that-is-long-enough-here" >> server/.env
+          echo "REFRESH_SECRET=ci-refresh-secret-value-that-is-long-enough" >> server/.env
 
       - name: Build Docker images
         run: docker compose build

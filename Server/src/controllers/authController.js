@@ -3,16 +3,15 @@ const jwt = require('jsonwebtoken');
 const db = require('../db/connection');
 const { isValidEmail, isValidPassword } = require('../utils/validation');
 
-const JWT_SECRET = process.env.JWT_SECRET;
-const REFRESH_SECRET = process.env.REFRESH_SECRET;
 const SALT_ROUNDS = 10;
 
+// Read secrets at call-time so test environments can override via process.env
 function generateAccessToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '15m' });
 }
 
 function generateRefreshToken(payload) {
-  return jwt.sign(payload, REFRESH_SECRET, { expiresIn: '7d' });
+  return jwt.sign(payload, process.env.REFRESH_SECRET, { expiresIn: '7d' });
 }
 
 // POST /api/auth/register
@@ -28,7 +27,9 @@ async function register(req, res) {
   }
 
   if (!isValidPassword(password)) {
-    return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+    return res
+      .status(400)
+      .json({ error: 'Password must be at least 8 characters and include a letter and a number.' });
   }
 
   try {
@@ -50,8 +51,8 @@ async function register(req, res) {
     // Store refresh token in httpOnly cookie
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: false, // set to true in production with HTTPS
-      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
     });
 
@@ -93,8 +94,8 @@ async function login(req, res) {
     // Store refresh token in httpOnly cookie
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -114,7 +115,7 @@ async function refresh(req, res) {
   }
 
   try {
-    const decoded = jwt.verify(refreshToken, REFRESH_SECRET);
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET);
     const accessToken = generateAccessToken({ userId: decoded.userId, email: decoded.email });
     res.json({ accessToken });
   } catch {
