@@ -20,7 +20,6 @@ const request = require('supertest');
 const app = require('../app');
 const db = require('../db/connection');
 const bcrypt = require('bcrypt');
-const crypto = require('crypto');
 
 beforeAll(() => {
   process.env.JWT_SECRET = 'test-jwt-secret';
@@ -28,11 +27,6 @@ beforeAll(() => {
 });
 
 beforeEach(() => jest.clearAllMocks());
-
-// Helper — build the SHA-256 hash of a plain token (mirrors controller logic)
-function hashToken(token) {
-  return crypto.createHash('sha256').update(token).digest('hex');
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/auth/forgot-password
