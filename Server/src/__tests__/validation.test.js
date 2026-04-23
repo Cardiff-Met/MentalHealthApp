@@ -37,8 +37,8 @@ describe('isValidEmail', () => {
 // isValidPassword
 // ---------------------------------------------------------------------------
 describe('isValidPassword', () => {
-  test('accepts a password of exactly 8 characters', () => {
-    expect(isValidPassword('password')).toBe(true);
+  test('accepts a password of exactly 8 characters with a letter and digit', () => {
+    expect(isValidPassword('passw0rd')).toBe(true);
   });
 
   test('accepts a password longer than 8 characters', () => {

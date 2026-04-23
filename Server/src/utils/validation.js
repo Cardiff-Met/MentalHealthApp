@@ -10,7 +10,11 @@ function isValidEmail(email) {
 
 function isValidPassword(password) {
   if (!password) return false;
-  return password.length >= 8;
+  if (password.length < 8) return false;
+  // Must contain at least one letter and one digit
+  if (!/[a-zA-Z]/.test(password)) return false;
+  if (!/[0-9]/.test(password)) return false;
+  return true;
 }
 
 function isValidMoodRating(rating) {
