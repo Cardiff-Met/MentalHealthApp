@@ -36,16 +36,16 @@ jobs:
 
       - name: Wait for database to be ready
         run: |
-          echo "Waiting for database to be ready..."
-          for i in {1..30}; do
-            if docker compose exec -T db mysqladmin ping -h localhost -u root -proot1234 --silent 2>/dev/null; then
-              echo "✅ Database is ready!"
+          echo "Waiting for database schema to be initialised..."
+          for i in {1..40}; do
+            if docker compose exec -T db mysql -u root -proot1234 -e "SELECT 1 FROM mental_health_app.users LIMIT 1;" 2>/dev/null; then
+              echo "✅ Database schema is ready!"
               exit 0
             fi
-            echo "Waiting for database... ($i/30)"
+            echo "Waiting for schema... ($i/40)"
             sleep 3
           done
-          echo "❌ Database did not become ready in time"
+          echo "❌ Database schema did not initialise in time"
           docker compose logs db
           exit 1
 

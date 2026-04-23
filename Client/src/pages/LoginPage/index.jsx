@@ -43,63 +43,91 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ maxWidth: '400px', margin: '100px auto', padding: '2rem' }}>
-      <h1>Mental Health Support App</h1>
-      <h2>{isRegister ? 'Create Account' : 'Login'}</h2>
-
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '1rem' }}>
-          <label>Email</label>
-          <br />
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={{ width: '100%', padding: '0.5rem' }}
-          />
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        {/* Branding */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-2xl shadow-lg mb-4">
+            <span className="text-3xl">🧠</span>
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900">MindSpace</h1>
+          <p className="text-slate-500 text-sm mt-1">
+            Mental health support for Cardiff Met students
+          </p>
         </div>
 
-        <div style={{ marginBottom: '1rem' }}>
-          <label>Password</label>
-          <br />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{ width: '100%', padding: '0.5rem' }}
-          />
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-xl border border-slate-100 p-8">
+          <h2 className="text-xl font-semibold text-slate-800 mb-6">
+            {isRegister ? 'Create your account' : 'Welcome back'}
+          </h2>
+
+          {error && (
+            <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Email address
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="you@cardiffmet.ac.uk"
+                className="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder={isRegister ? 'Minimum 8 characters' : '••••••••'}
+                className="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-semibold rounded-lg text-sm transition-colors shadow-sm"
+            >
+              {loading
+                ? 'Please wait…'
+                : isRegister
+                  ? 'Create account'
+                  : 'Sign in'}
+            </button>
+          </form>
+
+          <p className="mt-5 text-center text-sm text-slate-500">
+            {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
+            <button
+              onClick={() => {
+                setIsRegister(!isRegister);
+                setError('');
+              }}
+              className="font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
+            >
+              {isRegister ? 'Sign in' : 'Register'}
+            </button>
+          </p>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={{ width: '100%', padding: '0.75rem' }}
-        >
-          {loading ? 'Please wait...' : isRegister ? 'Register' : 'Login'}
-        </button>
-      </form>
-
-      <p style={{ marginTop: '1rem', textAlign: 'center' }}>
-        {isRegister ? 'Already have an account?' : "Don't have an account?"}
-        <button
-          onClick={() => {
-            setIsRegister(!isRegister);
-            setError('');
-          }}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'blue',
-            cursor: 'pointer',
-          }}
-        >
-          {isRegister ? ' Login' : ' Register'}
-        </button>
-      </p>
+        <p className="text-center text-xs text-slate-400 mt-6">
+          Your data is handled securely and in line with GDPR.
+        </p>
+      </div>
     </div>
   );
 }
