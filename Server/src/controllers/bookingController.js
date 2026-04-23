@@ -95,11 +95,9 @@ async function cancelBooking(req, res) {
     const booking = rows[0];
 
     if (booking.status === 'confirmed') {
-      return res
-        .status(409)
-        .json({
-          error: 'Confirmed bookings cannot be cancelled. Please contact the wellbeing team.',
-        });
+      return res.status(409).json({
+        error: 'Confirmed bookings cannot be cancelled. Please contact the wellbeing team.',
+      });
     }
 
     if (booking.status === 'declined') {
