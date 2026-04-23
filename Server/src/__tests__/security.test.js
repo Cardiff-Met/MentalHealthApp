@@ -16,7 +16,6 @@ jest.mock('../db/connection');
 const request = require('supertest');
 const app = require('../app');
 const db = require('../db/connection');
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
 jest.mock('bcrypt');
@@ -151,7 +150,7 @@ describe('POST /api/auth/register — password policy', () => {
 
 describe('Cookie security flags on login', () => {
   test('✓ refreshToken cookie is HttpOnly and SameSite=Strict', async () => {
-    const hashed = await bcrypt.hash.mockResolvedValue('$hashed');
+    bcrypt.hash.mockResolvedValue('$hashed');
     db.query.mockResolvedValueOnce([
       [{ id: 1, email: 'student@cardiffmet.ac.uk', password: '$hashed', role: 'user' }],
     ]);
