@@ -168,6 +168,15 @@ async function runMigrations() {
       console.log('[migrate] Added column users.name');
     }
 
+    // Migration 011 — add categories JSON column to resources, seed from category
+    if (!(await columnExists('resources', 'categories'))) {
+      await db.query(`ALTER TABLE resources ADD COLUMN categories JSON NULL AFTER category`);
+      await db.query(
+        `UPDATE resources SET categories = JSON_ARRAY(category) WHERE categories IS NULL`
+      );
+      console.log('[migrate] Added resources.categories and seeded from category');
+    }
+
     console.log('[migrate] Schema up to date');
   } catch (err) {
     console.error('[migrate] Migration failed:', err.message);

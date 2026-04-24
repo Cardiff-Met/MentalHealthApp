@@ -24,18 +24,26 @@ async function listResources(req, res) {
   }
 }
 
+const VALID_CATEGORIES = ['general', 'crisis', 'anxiety', 'self-help', 'mindfulness'];
+
 // POST /api/admin/resources
 async function createResource(req, res) {
-  const { title, description, url, category, min_mood, max_mood } = req.body;
+  const { title, description, url, categories, min_mood, max_mood } = req.body;
 
-  if (!title || !url || !category) {
-    return res.status(400).json({ error: 'title, url, and category are required.' });
+  if (!title || !url) {
+    return res.status(400).json({ error: 'title and url are required.' });
+  }
+
+  const cats = Array.isArray(categories) && categories.length > 0 ? categories : ['general'];
+  const invalid = cats.filter((c) => !VALID_CATEGORIES.includes(c));
+  if (invalid.length > 0) {
+    return res.status(400).json({ error: `Invalid categories: ${invalid.join(', ')}.` });
   }
 
   try {
     const [result] = await db.query(
-      'INSERT INTO resources (title, description, url, category, min_mood, max_mood) VALUES (?, ?, ?, ?, ?, ?)',
-      [title, description || null, url, category, min_mood ?? 1, max_mood ?? 5]
+      'INSERT INTO resources (title, description, url, category, categories, min_mood, max_mood) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [title, description || null, url, cats[0], JSON.stringify(cats), min_mood ?? 1, max_mood ?? 5]
     );
     res.status(201).json({ message: 'Resource created.', resourceId: result.insertId });
   } catch (err) {
@@ -47,7 +55,7 @@ async function createResource(req, res) {
 // PATCH /api/admin/resources/:id
 async function updateResource(req, res) {
   const resourceId = parseInt(req.params.id, 10);
-  const { title, description, url, category, min_mood, max_mood } = req.body;
+  const { title, description, url, categories, min_mood, max_mood } = req.body;
 
   try {
     const [rows] = await db.query('SELECT id FROM resources WHERE id = ?', [resourceId]);
@@ -55,12 +63,15 @@ async function updateResource(req, res) {
       return res.status(404).json({ error: 'Resource not found.' });
     }
 
+    const cats = Array.isArray(categories) && categories.length > 0 ? categories : null;
+
     await db.query(
       `UPDATE resources
        SET title = COALESCE(?, title),
            description = COALESCE(?, description),
            url = COALESCE(?, url),
            category = COALESCE(?, category),
+           categories = COALESCE(?, categories),
            min_mood = COALESCE(?, min_mood),
            max_mood = COALESCE(?, max_mood)
        WHERE id = ?`,
@@ -68,7 +79,8 @@ async function updateResource(req, res) {
         title ?? null,
         description ?? null,
         url ?? null,
-        category ?? null,
+        cats ? cats[0] : null,
+        cats ? JSON.stringify(cats) : null,
         min_mood ?? null,
         max_mood ?? null,
         resourceId,

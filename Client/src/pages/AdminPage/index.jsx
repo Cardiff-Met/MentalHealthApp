@@ -6,7 +6,34 @@ import ErrorBanner from '@/components/ErrorBanner';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import EmptyState from '@/components/EmptyState';
 
-const CATEGORIES = ['general', 'crisis', 'anxiety', 'self-help', 'mindfulness'];
+const CATEGORIES = [
+  {
+    key: 'general',
+    label: 'General',
+    style: 'bg-slate-100 text-slate-600 border-slate-200',
+  },
+  {
+    key: 'crisis',
+    label: 'Crisis',
+    style: 'bg-red-100 text-red-700 border-red-200',
+  },
+  {
+    key: 'anxiety',
+    label: 'Anxiety',
+    style: 'bg-amber-100 text-amber-700 border-amber-200',
+  },
+  {
+    key: 'self-help',
+    label: 'Self-help',
+    style: 'bg-blue-100 text-blue-700 border-blue-200',
+  },
+  {
+    key: 'mindfulness',
+    label: 'Mindfulness',
+    style: 'bg-teal-100 text-teal-700 border-teal-200',
+  },
+];
+const CAT_STYLE = Object.fromEntries(CATEGORIES.map((c) => [c.key, c.style]));
 const ROLES = ['user', 'therapist', 'admin'];
 
 const ROLE_STYLES = {
@@ -339,10 +366,22 @@ const EMPTY_FORM = {
   title: '',
   description: '',
   url: '',
-  category: 'general',
+  categories: ['general'],
   min_mood: 1,
   max_mood: 5,
 };
+
+function parseCategories(raw) {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return [raw];
+    }
+  }
+  return [];
+}
 
 function ResourcesTab({ authFetch }) {
   const [resources, setResources] = useState([]);
@@ -386,12 +425,28 @@ function ResourcesTab({ authFetch }) {
       title: r.title,
       description: r.description ?? '',
       url: r.url,
-      category: r.category,
+      categories:
+        parseCategories(r.categories).length > 0
+          ? parseCategories(r.categories)
+          : [r.category || 'general'],
       min_mood: r.min_mood,
       max_mood: r.max_mood,
     });
     setShowForm(true);
     setError('');
+  }
+
+  function toggleCategory(key) {
+    setForm((f) => {
+      const has = f.categories.includes(key);
+      if (has && f.categories.length === 1) return f; // must keep at least one
+      return {
+        ...f,
+        categories: has
+          ? f.categories.filter((c) => c !== key)
+          : [...f.categories, key],
+      };
+    });
   }
 
   async function handleSave(e) {
@@ -407,6 +462,7 @@ function ResourcesTab({ authFetch }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ...form,
+            categories: form.categories,
             min_mood: Number(form.min_mood),
             max_mood: Number(form.max_mood),
           }),
@@ -524,23 +580,32 @@ function ResourcesTab({ authFetch }) {
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Category *
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Categories *{' '}
+                  <span className="text-slate-400 font-normal">
+                    (select all that apply)
+                  </span>
                 </label>
-                <select
-                  value={form.category}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, category: e.target.value }))
-                  }
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
-                >
-                  {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex flex-wrap gap-2">
+                  {CATEGORIES.map(({ key, label, style }) => {
+                    const selected = form.categories.includes(key);
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => toggleCategory(key)}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
+                          selected
+                            ? style + ' ring-2 ring-offset-1 ring-indigo-400'
+                            : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               <div className="flex gap-3">
                 <div className="flex-1">
@@ -637,9 +702,16 @@ function ResourcesTab({ authFetch }) {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-xs font-medium px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full capitalize">
-                      {r.category}
-                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {parseCategories(r.categories).map((cat) => (
+                        <span
+                          key={cat}
+                          className={`text-xs font-medium px-2 py-0.5 rounded-full border capitalize ${CAT_STYLE[cat] ?? 'bg-slate-100 text-slate-600 border-slate-200'}`}
+                        >
+                          {cat}
+                        </span>
+                      ))}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-slate-500">
                     {r.min_mood}–{r.max_mood}
