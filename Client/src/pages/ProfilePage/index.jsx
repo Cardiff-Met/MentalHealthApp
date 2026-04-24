@@ -5,6 +5,71 @@ import Card from '@/components/Card';
 import Button from '@/components/Button';
 import ErrorBanner from '@/components/ErrorBanner';
 
+// ─── Edit Name Form ──────────────────────────────────────────────────────────
+
+function EditNameForm({ authFetch, currentName, onSaved }) {
+  const [name, setName] = useState(currentName ?? '');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+    try {
+      const res = await authFetch('/api/users/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error);
+        return;
+      }
+      setSuccess('Name updated.');
+      onSaved(data.user.name);
+    } catch {
+      setError('Could not connect to server. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Card className="mb-6">
+      <h2 className="text-lg font-semibold text-slate-800 mb-5">
+        Display name
+      </h2>
+      <ErrorBanner message={error} className="mb-4" />
+      {success && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700"
+        >
+          ✓ {success}
+        </div>
+      )}
+      <form onSubmit={handleSubmit} className="flex gap-3">
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Your full name"
+          maxLength={100}
+          className="flex-1 px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+        />
+        <Button type="submit" disabled={loading}>
+          {loading ? 'Saving…' : 'Save'}
+        </Button>
+      </form>
+    </Card>
+  );
+}
+
 // ─── Change Password Form ────────────────────────────────────────────────────
 
 function ChangePasswordForm({ authFetch }) {
@@ -291,6 +356,12 @@ export default function ProfilePage() {
           Account details
         </h2>
         <dl className="space-y-3">
+          {profileData?.name && (
+            <div className="flex items-center justify-between">
+              <dt className="text-sm font-medium text-slate-500">Name</dt>
+              <dd className="text-sm text-slate-800">{profileData.name}</dd>
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <dt className="text-sm font-medium text-slate-500">Email</dt>
             <dd className="text-sm text-slate-800">{user?.email ?? '—'}</dd>
@@ -344,6 +415,15 @@ export default function ProfilePage() {
           )}
         </div>
       </Card>
+
+      {/* Display name */}
+      <EditNameForm
+        authFetch={authFetch}
+        currentName={profileData?.name}
+        onSaved={(newName) =>
+          setProfileData((prev) => ({ ...prev, name: newName }))
+        }
+      />
 
       {/* Change password */}
       <div className="mb-6">

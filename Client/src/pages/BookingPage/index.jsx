@@ -217,13 +217,26 @@ function BookingTab({ authFetch, onBooked }) {
                         <button
                           onClick={() => handleBook(slot)}
                           disabled={submitting !== null}
-                          className={`w-full py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                          className={`w-full py-1.5 px-1 rounded-lg text-xs font-semibold transition-colors leading-tight ${
                             submitting === slot.id
                               ? 'bg-indigo-200 text-indigo-500 cursor-wait'
                               : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white'
                           }`}
                         >
-                          {submitting === slot.id ? '…' : 'Book'}
+                          {submitting === slot.id ? (
+                            '…'
+                          ) : (
+                            <>
+                              <span className="block">Book</span>
+                              <span
+                                className="block font-normal text-indigo-400 truncate"
+                                style={{ fontSize: '0.6rem' }}
+                              >
+                                {slot.therapist_name ||
+                                  slot.therapist_email?.split('@')[0]}
+                              </span>
+                            </>
+                          )}
                         </button>
                       ) : (
                         <span className="w-full py-1.5 rounded-lg text-xs text-center text-slate-200 select-none">
@@ -336,6 +349,11 @@ function MyBookingsTab({ authFetch }) {
                     {displayTime(timeKey)} –{' '}
                     {displayTime(
                       `${String(parseInt(timeKey.split(':')[0], 10) + 1).padStart(2, '0')}:00`
+                    )}
+                    {(booking.therapist_name || booking.therapist_email) && (
+                      <span className="ml-2 text-slate-400">
+                        · {booking.therapist_name || booking.therapist_email}
+                      </span>
                     )}
                   </p>
                 </div>

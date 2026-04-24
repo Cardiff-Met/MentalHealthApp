@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
   id         INT AUTO_INCREMENT PRIMARY KEY,
   email      VARCHAR(255) NOT NULL UNIQUE,
   password   VARCHAR(255) NOT NULL,
-  role       ENUM('user', 'admin') NOT NULL DEFAULT 'user',
+  role       ENUM('user', 'therapist', 'admin') NOT NULL DEFAULT 'user',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL DEFAULT NULL
 );
@@ -49,11 +49,13 @@ CREATE TABLE IF NOT EXISTS saved_resources (
 
 -- Therapy slots
 CREATE TABLE IF NOT EXISTS therapy_slots (
-  id          INT AUTO_INCREMENT PRIMARY KEY,
-  slot_date   DATE NOT NULL,
-  slot_time   TIME NOT NULL,
-  time_of_day ENUM('morning', 'afternoon', 'evening') NOT NULL,
-  status      ENUM('available', 'pending', 'confirmed') DEFAULT 'available'
+  id           INT AUTO_INCREMENT PRIMARY KEY,
+  slot_date    DATE NOT NULL,
+  slot_time    TIME NOT NULL,
+  time_of_day  ENUM('morning', 'afternoon', 'evening') NOT NULL,
+  status       ENUM('available', 'pending', 'confirmed') DEFAULT 'available',
+  therapist_id INT NULL,
+  FOREIGN KEY (therapist_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- Bookings

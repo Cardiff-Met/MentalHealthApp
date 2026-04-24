@@ -17,6 +17,7 @@ export default function AppShell({ children }) {
   }
 
   const isAdmin = user?.role === 'admin';
+  const isTherapist = user?.role === 'therapist';
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -58,6 +59,19 @@ export default function AppShell({ children }) {
               <NavLink to="/profile" className={navLinkClass}>
                 Profile
               </NavLink>
+              {(isTherapist || isAdmin) && (
+                <NavLink
+                  to="/therapist"
+                  className={({ isActive }) =>
+                    [
+                      navLinkClass({ isActive }),
+                      'text-teal-600 hover:text-teal-800',
+                    ].join(' ')
+                  }
+                >
+                  My Availability
+                </NavLink>
+              )}
               {isAdmin && (
                 <NavLink
                   to="/admin"
@@ -75,6 +89,11 @@ export default function AppShell({ children }) {
 
             {/* Right side */}
             <div className="flex items-center gap-3">
+              {(isTherapist || isAdmin) && (
+                <span className="text-xs font-semibold px-2 py-0.5 bg-teal-100 text-teal-700 rounded-full">
+                  Therapist
+                </span>
+              )}
               {isAdmin && (
                 <span className="text-xs font-semibold px-2 py-0.5 bg-violet-100 text-violet-700 rounded-full">
                   Admin

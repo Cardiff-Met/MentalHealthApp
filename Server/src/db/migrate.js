@@ -23,6 +23,32 @@ async function columnExists(table, column) {
   return rows[0].cnt > 0;
 }
 
+/** Build 3 weeks of Mon–Fri slots: 09–11 morning, 14–16 afternoon (1-hour each). */
+function buildSlots() {
+  const slots = [];
+  const today = new Date();
+  const times = [
+    ['09:00:00', 'morning'],
+    ['10:00:00', 'morning'],
+    ['11:00:00', 'morning'],
+    ['14:00:00', 'afternoon'],
+    ['15:00:00', 'afternoon'],
+    ['16:00:00', 'afternoon'],
+  ];
+  for (let week = 1; week <= 3; week++) {
+    for (let dow = 1; dow <= 5; dow++) {
+      const d = new Date(today);
+      const diff = (dow - d.getDay() + 7) % 7 || 7;
+      d.setDate(d.getDate() + diff + (week - 1) * 7);
+      const dateStr = d.toISOString().slice(0, 10);
+      for (const [time, tod] of times) {
+        slots.push([dateStr, time, tod]);
+      }
+    }
+  }
+  return slots;
+}
+
 async function runMigrations() {
   try {
     // Migration 001 — add category column to resources
@@ -58,26 +84,88 @@ async function runMigrations() {
     // Migration 004 — seed therapy slots if table is empty
     const [[{ cnt }]] = await db.query('SELECT COUNT(*) AS cnt FROM therapy_slots');
     if (cnt === 0) {
-      // Generate 3 weeks of Mon–Fri slots (morning / afternoon / evening)
-      const slots = [];
-      const today = new Date();
-      for (let week = 1; week <= 3; week++) {
-        for (let dow = 1; dow <= 5; dow++) {
-          const d = new Date(today);
-          const diff = (dow - d.getDay() + 7) % 7 || 7;
-          d.setDate(d.getDate() + diff + (week - 1) * 7);
-          const dateStr = d.toISOString().slice(0, 10);
-          slots.push(
-            [dateStr, '09:00:00', 'morning'],
-            [dateStr, '13:00:00', 'afternoon'],
-            [dateStr, '17:00:00', 'evening']
-          );
-        }
-      }
+      const slots = buildSlots();
       await db.query('INSERT INTO therapy_slots (slot_date, slot_time, time_of_day) VALUES ?', [
         slots,
       ]);
       console.log(`[migrate] Seeded ${slots.length} therapy slots`);
+    }
+
+    // Migration 005 — add therapist role to users ENUM
+    const [[{ roleCol }]] = await db.query(
+      `SELECT COLUMN_TYPE AS roleCol
+       FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = 'users'
+         AND COLUMN_NAME = 'role'`
+    );
+    if (!roleCol.includes('therapist')) {
+      await db.query(
+        `ALTER TABLE users
+         MODIFY role ENUM('user','therapist','admin') NOT NULL DEFAULT 'user'`
+      );
+      console.log('[migrate] Added therapist to users.role ENUM');
+    }
+
+    // Migration 006 — add therapist_id FK to therapy_slots
+    if (!(await columnExists('therapy_slots', 'therapist_id'))) {
+      await db.query(
+        `ALTER TABLE therapy_slots
+         ADD COLUMN therapist_id INT NULL
+         AFTER time_of_day,
+         ADD CONSTRAINT fk_slot_therapist
+           FOREIGN KEY (therapist_id) REFERENCES users(id) ON DELETE SET NULL`
+      );
+      console.log('[migrate] Added therapy_slots.therapist_id');
+    }
+
+    // Migration 007 — seed test therapist account
+    const [[{ therapistCount }]] = await db.query(
+      `SELECT COUNT(*) AS therapistCount FROM users WHERE role = 'therapist'`
+    );
+    if (therapistCount === 0) {
+      const [result] = await db.query(
+        `INSERT IGNORE INTO users (email, password, role) VALUES (?, ?, 'therapist')`,
+        [
+          'therapist@cardiffmet.ac.uk',
+          '$2b$10$JuCrCLuEpl3sXfaxKMM8PeIStHTbDQH5lm/npzat2/FCJUyvtCboK',
+        ]
+      );
+      if (result.affectedRows > 0) {
+        // Seed 3 weeks of slots owned by this therapist, replacing orphan slots
+        await db.query(
+          "DELETE FROM therapy_slots WHERE therapist_id IS NULL AND status = 'available'"
+        );
+        const [[{ tid }]] = await db.query(
+          `SELECT id AS tid FROM users WHERE email = 'therapist@cardiffmet.ac.uk'`
+        );
+        const slots = buildSlots().map((s) => [...s, tid]);
+        await db.query(
+          'INSERT INTO therapy_slots (slot_date, slot_time, time_of_day, therapist_id) VALUES ?',
+          [slots]
+        );
+        console.log(`[migrate] Seeded therapist account and ${slots.length} owned slots`);
+      }
+    }
+
+    // Migration 009 — replace legacy 13:00/17:00 slots with 1-hour schedule
+    const [[{ legacyCount }]] = await db.query(
+      `SELECT COUNT(*) AS legacyCount FROM therapy_slots
+       WHERE slot_time IN ('13:00:00', '17:00:00')`
+    );
+    if (legacyCount > 0) {
+      await db.query("DELETE FROM therapy_slots WHERE status = 'available'");
+      const slots = buildSlots();
+      await db.query('INSERT INTO therapy_slots (slot_date, slot_time, time_of_day) VALUES ?', [
+        slots,
+      ]);
+      console.log(`[migrate] Replaced legacy slots with ${slots.length} 1-hour slots`);
+    }
+
+    // Migration 010 — add name column to users
+    if (!(await columnExists('users', 'name'))) {
+      await db.query(`ALTER TABLE users ADD COLUMN name VARCHAR(100) NULL AFTER email`);
+      console.log('[migrate] Added column users.name');
     }
 
     console.log('[migrate] Schema up to date');
