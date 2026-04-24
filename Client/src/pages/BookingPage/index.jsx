@@ -7,13 +7,12 @@ import ErrorBanner from '@/components/ErrorBanner';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import EmptyState from '@/components/EmptyState';
 
-const SLOT_FILTERS = ['all', 'morning', 'afternoon', 'evening'];
+// 1-hour slots: 09–11 morning, 14–16 afternoon
+const MORNING_SLOTS = ['09:00', '10:00', '11:00'];
+const AFTERNOON_SLOTS = ['14:00', '15:00', '16:00'];
+const ALL_SLOTS = [...MORNING_SLOTS, ...AFTERNOON_SLOTS];
 
-const TIME_ICONS = {
-  morning: '🌅',
-  afternoon: '☀️',
-  evening: '🌙',
-};
+const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 
 const STATUS_STYLES = {
   pending: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -21,36 +20,60 @@ const STATUS_STYLES = {
   declined: 'bg-red-50 text-red-700 border-red-200',
 };
 
-function formatDate(dateStr) {
-  if (!dateStr) return '—';
-  // Ensure MySQL "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS" parse correctly
-  const safe = String(dateStr).replace(' ', 'T');
-  const date = new Date(safe);
-  if (isNaN(date)) return '—';
-  return date.toLocaleDateString('en-GB', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
+function toDateKey(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+/** Monday of the week containing `date`. */
+function mondayOf(date) {
+  const d = new Date(date);
+  const day = d.getDay(); // 0=Sun
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/** Array of the 5 weekday Dates for the week starting at `monday`. */
+function weekDates(monday) {
+  return Array.from({ length: 5 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
   });
 }
 
-function formatTime(timeStr) {
-  if (!timeStr) return '—';
-  const [h, m] = timeStr.split(':');
-  const hour = parseInt(h, 10);
-  const ampm = hour >= 12 ? 'pm' : 'am';
-  const display = hour > 12 ? hour - 12 : hour || 12;
-  return `${display}:${m} ${ampm}`;
+function formatDayHeader(date) {
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }
 
-// ─── Book a Session tab ───────────────────────────────────────────────────────
+function formatBookingDate(dateStr) {
+  if (!dateStr) return '—';
+  const safe = String(dateStr).replace(' ', 'T');
+  const d = new Date(safe);
+  if (isNaN(d)) return '—';
+  return d.toLocaleDateString('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  });
+}
+
+function displayTime(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  const ampm = h >= 12 ? 'pm' : 'am';
+  const display = h > 12 ? h - 12 : h;
+  return `${display}:${String(m).padStart(2, '0')} ${ampm}`;
+}
+
+// ─── Calendar booking tab ─────────────────────────────────────────────────────
 
 function BookingTab({ authFetch, onBooked }) {
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState('all');
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting, setSubmitting] = useState(null); // slot id being booked
+  const [weekOffset, setWeekOffset] = useState(0);
 
   useEffect(() => {
     async function fetchSlots() {
@@ -61,7 +84,7 @@ function BookingTab({ authFetch, onBooked }) {
           setError(data.error);
           return;
         }
-        setSlots(data.slots);
+        setSlots(data.slots ?? []);
       } catch {
         setError('Could not load available slots.');
       } finally {
@@ -71,14 +94,14 @@ function BookingTab({ authFetch, onBooked }) {
     fetchSlots();
   }, [authFetch]);
 
-  async function handleBook(slotId) {
-    setSubmitting(true);
+  async function handleBook(slot) {
+    setSubmitting(slot.id);
     setError('');
     try {
       const res = await authFetch('/api/booking', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slotId }),
+        body: JSON.stringify({ slotId: slot.id }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -89,75 +112,153 @@ function BookingTab({ authFetch, onBooked }) {
     } catch {
       setError('Could not submit booking. Please try again.');
     } finally {
-      setSubmitting(false);
+      setSubmitting(null);
     }
   }
 
-  const filteredSlots =
-    filter === 'all' ? slots : slots.filter((s) => s.time_of_day === filter);
-
   if (loading) return <LoadingSpinner message="Loading available slots…" />;
+
+  // Build lookup: dateKey → { "HH:MM": slot }
+  const slotMap = {};
+  for (const slot of slots) {
+    const dateKey = String(slot.slot_date).slice(0, 10);
+    if (!slotMap[dateKey]) slotMap[dateKey] = {};
+    const timeKey = String(slot.slot_time).slice(0, 5); // "HH:MM"
+    slotMap[dateKey][timeKey] = slot;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const monday = mondayOf(today);
+  monday.setDate(monday.getDate() + weekOffset * 7);
+  const days = weekDates(monday);
+
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() - 7);
+  const canGoPrev = weekOffset > 0;
 
   return (
     <>
       <ErrorBanner message={error} className="mb-6" />
 
-      {/* Time-of-day filter chips */}
-      <div className="flex gap-2 mb-6 flex-wrap">
-        {SLOT_FILTERS.map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              filter === f
-                ? 'bg-indigo-600 text-white shadow-sm'
-                : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'
-            }`}
-          >
-            {f !== 'all' && <span className="mr-1.5">{TIME_ICONS[f]}</span>}
-            {f.charAt(0).toUpperCase() + f.slice(1)}
-          </button>
-        ))}
+      {/* Week navigation */}
+      <div className="flex items-center justify-between mb-4">
+        <button
+          onClick={() => setWeekOffset((w) => w - 1)}
+          disabled={!canGoPrev}
+          className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          aria-label="Previous week"
+        >
+          ←
+        </button>
+        <span className="text-sm font-medium text-slate-600">
+          {formatDayHeader(days[0])} – {formatDayHeader(days[4])}
+        </span>
+        <button
+          onClick={() => setWeekOffset((w) => w + 1)}
+          className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:border-slate-300 transition-colors"
+          aria-label="Next week"
+        >
+          →
+        </button>
       </div>
 
-      {filteredSlots.length === 0 ? (
-        <EmptyState
-          icon="📭"
-          title="No slots available"
-          message="No slots available for this time period. Try a different filter."
-        />
-      ) : (
-        <div className="space-y-3">
-          {filteredSlots.map((slot) => (
-            <Card
-              key={slot.id}
-              className="flex items-center justify-between gap-4"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center text-xl shrink-0">
-                  {TIME_ICONS[slot.time_of_day] || '📅'}
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-800">
-                    {formatDate(slot.slot_date)}
-                  </p>
-                  <p className="text-sm text-slate-500">
-                    {formatTime(slot.slot_time)} ·{' '}
-                    <span className="capitalize">{slot.time_of_day}</span>
-                  </p>
-                </div>
-              </div>
-              <Button
-                size="sm"
-                onClick={() => handleBook(slot.id)}
-                disabled={submitting}
+      {/* Calendar grid */}
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+        {/* Day headers */}
+        <div className="grid grid-cols-6 border-b border-slate-100">
+          <div className="py-3 px-3 text-xs font-medium text-slate-400" />
+          {days.map((d, i) => {
+            const isToday = toDateKey(d) === toDateKey(today);
+            return (
+              <div
+                key={i}
+                className="py-3 text-center border-l border-slate-100"
               >
-                {submitting ? 'Booking…' : 'Request'}
-              </Button>
-            </Card>
-          ))}
+                <p
+                  className={`text-xs font-semibold ${isToday ? 'text-indigo-600' : 'text-slate-500'}`}
+                >
+                  {DAY_LABELS[i]}
+                </p>
+                <p
+                  className={`text-sm font-bold mt-0.5 ${isToday ? 'text-indigo-600' : 'text-slate-800'}`}
+                >
+                  {d.getDate()}
+                </p>
+              </div>
+            );
+          })}
         </div>
-      )}
+
+        {/* Time rows */}
+        {ALL_SLOTS.map((time, idx) => {
+          const isMorningEnd = idx === MORNING_SLOTS.length - 1;
+          return (
+            <>
+              <div
+                key={time}
+                className={`grid grid-cols-6 ${isMorningEnd ? '' : 'border-b border-slate-50'}`}
+              >
+                <div className="py-3 px-3 flex items-center">
+                  <span className="text-xs text-slate-400 font-medium tabular-nums">
+                    {displayTime(time)}
+                  </span>
+                </div>
+                {days.map((d, di) => {
+                  const dateKey = toDateKey(d);
+                  const slot = slotMap[dateKey]?.[time];
+                  const isPast = d < today;
+                  return (
+                    <div
+                      key={di}
+                      className="py-2 px-1.5 border-l border-slate-100 flex items-center justify-center"
+                    >
+                      {slot && !isPast ? (
+                        <button
+                          onClick={() => handleBook(slot)}
+                          disabled={submitting !== null}
+                          className={`w-full py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                            submitting === slot.id
+                              ? 'bg-indigo-200 text-indigo-500 cursor-wait'
+                              : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white'
+                          }`}
+                        >
+                          {submitting === slot.id ? '…' : 'Book'}
+                        </button>
+                      ) : (
+                        <span className="w-full py-1.5 rounded-lg text-xs text-center text-slate-200 select-none">
+                          —
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Gap between morning and afternoon */}
+              {isMorningEnd && (
+                <div
+                  key="gap"
+                  className="grid grid-cols-6 border-t-2 border-b-2 border-slate-100 bg-slate-50"
+                >
+                  <div className="py-1.5 px-3">
+                    <span className="text-xs text-slate-400">Lunch</span>
+                  </div>
+                  {days.map((_, di) => (
+                    <div
+                      key={di}
+                      className="border-l border-slate-100 py-1.5"
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          );
+        })}
+      </div>
+
+      <p className="text-xs text-slate-400 mt-3 text-center">
+        Each session is 1 hour · Mon–Fri only
+      </p>
     </>
   );
 }
@@ -220,47 +321,47 @@ function MyBookingsTab({ authFetch }) {
         />
       ) : (
         <div className="space-y-3">
-          {bookings.map((booking) => (
-            <Card
-              key={booking.id}
-              className="flex items-center justify-between gap-4"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center text-xl shrink-0">
-                  {TIME_ICONS[booking.time_of_day] || '📅'}
-                </div>
+          {bookings.map((booking) => {
+            const timeKey = String(booking.slot_time).slice(0, 5);
+            return (
+              <Card
+                key={booking.id}
+                className="flex items-center justify-between gap-4"
+              >
                 <div>
                   <p className="font-semibold text-slate-800">
-                    {formatDate(booking.slot_date)}
+                    {formatBookingDate(booking.slot_date)}
                   </p>
-                  <p className="text-sm text-slate-500">
-                    {formatTime(booking.slot_time)} ·{' '}
-                    <span className="capitalize">{booking.time_of_day}</span>
+                  <p className="text-sm text-slate-500 mt-0.5">
+                    {displayTime(timeKey)} –{' '}
+                    {displayTime(
+                      `${String(parseInt(timeKey.split(':')[0], 10) + 1).padStart(2, '0')}:00`
+                    )}
                   </p>
                 </div>
-              </div>
-              <div className="flex items-center gap-3 shrink-0">
-                <span
-                  className={`text-xs font-semibold px-2.5 py-1 rounded-full border capitalize ${
-                    STATUS_STYLES[booking.status] ??
-                    'bg-slate-50 text-slate-600 border-slate-200'
-                  }`}
-                >
-                  {booking.status}
-                </span>
-                {booking.status === 'pending' && (
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    disabled={cancellingId === booking.id}
-                    onClick={() => handleCancel(booking.id)}
+                <div className="flex items-center gap-3 shrink-0">
+                  <span
+                    className={`text-xs font-semibold px-2.5 py-1 rounded-full border capitalize ${
+                      STATUS_STYLES[booking.status] ??
+                      'bg-slate-50 text-slate-600 border-slate-200'
+                    }`}
                   >
-                    {cancellingId === booking.id ? 'Cancelling…' : 'Cancel'}
-                  </Button>
-                )}
-              </div>
-            </Card>
-          ))}
+                    {booking.status}
+                  </span>
+                  {booking.status === 'pending' && (
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      disabled={cancellingId === booking.id}
+                      onClick={() => handleCancel(booking.id)}
+                    >
+                      {cancellingId === booking.id ? 'Cancelling…' : 'Cancel'}
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            );
+          })}
         </div>
       )}
     </>
@@ -275,7 +376,6 @@ export default function BookingPage() {
   const [tab, setTab] = useState('book');
   const [bookingStatus, setBookingStatus] = useState(null);
 
-  // Booking confirmation screen
   if (bookingStatus) {
     return (
       <div className="max-w-xl mx-auto text-center py-16">
@@ -311,11 +411,11 @@ export default function BookingPage() {
   }
 
   return (
-    <div>
+    <div className="max-w-4xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900">Therapy Sessions</h1>
         <p className="text-slate-500 mt-1">
-          Book an appointment with the Cardiff Met wellbeing team.
+          Book a 1-hour appointment with the Cardiff Met wellbeing team.
         </p>
       </div>
 
