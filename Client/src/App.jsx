@@ -1,5 +1,7 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AppShell from '@/components/AppShell';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import LoginPage from '@/pages/LoginPage';
 import DashboardPage from '@/pages/DashboardPage';
 import MoodPage from '@/pages/MoodPage';
@@ -7,6 +9,9 @@ import ResourcesPage from '@/pages/ResourcesPage';
 import BookingPage from '@/pages/BookingPage';
 import ProfilePage from '@/pages/ProfilePage';
 import { useAuth } from '@/context';
+
+// Lazy-load heavy pages to keep the initial bundle small
+const MoodHistoryPage = lazy(() => import('@/pages/MoodHistoryPage'));
 
 function ProtectedRoute({ children, adminOnly = false }) {
   const { accessToken, user } = useAuth();
@@ -20,64 +25,73 @@ function ProtectedRoute({ children, adminOnly = false }) {
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
+    <Suspense fallback={<LoadingSpinner />}>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
 
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <DashboardPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/mood"
-        element={
-          <ProtectedRoute>
-            <MoodPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/resources"
-        element={
-          <ProtectedRoute>
-            <ResourcesPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/booking"
-        element={
-          <ProtectedRoute>
-            <BookingPage />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mood"
+          element={
+            <ProtectedRoute>
+              <MoodPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mood/history"
+          element={
+            <ProtectedRoute>
+              <MoodHistoryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/resources"
+          element={
+            <ProtectedRoute>
+              <ResourcesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/booking"
+          element={
+            <ProtectedRoute>
+              <BookingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <ProfilePage />
-          </ProtectedRoute>
-        }
-      />
+        {/* Day 12 — built later */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute adminOnly>
+              <div className="text-slate-500 py-10 text-center">
+                Admin dashboard coming soon.
+              </div>
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Day 12 — built later */}
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute adminOnly>
-            <div className="text-slate-500 py-10 text-center">
-              Admin dashboard coming soon.
-            </div>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </Suspense>
   );
 }
