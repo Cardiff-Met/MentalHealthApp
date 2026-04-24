@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context';
 import Card from '@/components/Card';
@@ -128,15 +128,24 @@ function ChangePasswordForm({ authFetch }) {
 
 function DeleteAccountSection({ authFetch, logout }) {
   const [confirming, setConfirming] = useState(false);
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   async function handleDelete() {
+    if (!password) {
+      setError('Please enter your password to confirm deletion.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
-      const res = await authFetch('/api/users/me', { method: 'DELETE' });
+      const res = await authFetch('/api/users/me', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
       if (!res.ok) {
         const data = await res.json();
         setError(data.error);
@@ -170,13 +179,34 @@ function DeleteAccountSection({ authFetch, logout }) {
           <p className="text-sm font-semibold text-red-700">
             Are you sure? This action is irreversible.
           </p>
+          <div>
+            <label
+              htmlFor="delete-password"
+              className="block text-sm font-medium text-slate-700 mb-1"
+            >
+              Enter your password to confirm
+            </label>
+            <input
+              id="delete-password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              placeholder="Your current password"
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+            />
+          </div>
           <div className="flex gap-3">
             <Button variant="danger" disabled={loading} onClick={handleDelete}>
               {loading ? 'Deleting…' : 'Yes, delete my account'}
             </Button>
             <Button
               variant="secondary"
-              onClick={() => setConfirming(false)}
+              onClick={() => {
+                setConfirming(false);
+                setPassword('');
+                setError('');
+              }}
               disabled={loading}
             >
               Cancel
@@ -194,6 +224,22 @@ export default function ProfilePage() {
   const { user, authFetch, logout } = useAuth();
   const [exportLoading, setExportLoading] = useState(false);
   const [exportError, setExportError] = useState('');
+  const [profileData, setProfileData] = useState(null);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const res = await authFetch('/api/users/me');
+        if (res.ok) {
+          const data = await res.json();
+          setProfileData(data.user);
+        }
+      } catch {
+        // silently ignore — we still show JWT-based info
+      }
+    }
+    fetchProfile();
+  }, [authFetch]);
 
   async function handleExport() {
     setExportLoading(true);
@@ -222,8 +268,10 @@ export default function ProfilePage() {
     }
   }
 
-  const joinedDate = user?.iat
-    ? new Date(user.iat * 1000).toLocaleDateString('en-GB', {
+  const joinedDate = profileData?.created_at
+    ? new Date(
+        String(profileData.created_at).replace(' ', 'T')
+      ).toLocaleDateString('en-GB', {
         day: 'numeric',
         month: 'long',
         year: 'numeric',
@@ -264,7 +312,7 @@ export default function ProfilePage() {
           {joinedDate && (
             <div className="flex items-center justify-between">
               <dt className="text-sm font-medium text-slate-500">
-                Token issued
+                Member since
               </dt>
               <dd className="text-sm text-slate-800">{joinedDate}</dd>
             </div>
