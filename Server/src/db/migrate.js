@@ -20,7 +20,22 @@ async function columnExists(table, column) {
   return rows[0].cnt > 0;
 }
 
+/** Wait until MySQL accepts connections (retries for up to ~60 s). */
+async function waitForDb(retries = 20, delayMs = 3000) {
+  for (let i = 1; i <= retries; i++) {
+    try {
+      await db.query('SELECT 1');
+      return; // connected
+    } catch {
+      console.log(`[migrate] Waiting for DB… (attempt ${i}/${retries})`);
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+  }
+  throw new Error('Database did not become ready in time');
+}
+
 async function runMigrations() {
+  await waitForDb();
   try {
     // Migration 001 — add category column to resources
     if (!(await columnExists('resources', 'category'))) {
