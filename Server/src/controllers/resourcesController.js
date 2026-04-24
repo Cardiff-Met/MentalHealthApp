@@ -1,21 +1,9 @@
 const db = require('../db/connection');
 
-// GET /api/resources?category=anxiety
+// GET /api/resources
 async function getResources(req, res) {
-  const { category } = req.query;
-
   try {
-    let sql = 'SELECT * FROM resources';
-    const params = [];
-
-    if (category) {
-      sql += ' WHERE category = ?';
-      params.push(category);
-    }
-
-    sql += ' ORDER BY id ASC';
-
-    const [resources] = await db.query(sql, params);
+    const [resources] = await db.query('SELECT * FROM resources ORDER BY id ASC');
     res.json({ resources });
   } catch (err) {
     console.error('Resources error:', err);
