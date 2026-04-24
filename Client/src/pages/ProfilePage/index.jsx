@@ -1,0 +1,309 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context';
+import Card from '@/components/Card';
+import Button from '@/components/Button';
+import ErrorBanner from '@/components/ErrorBanner';
+
+// ─── Change Password Form ────────────────────────────────────────────────────
+
+function ChangePasswordForm({ authFetch }) {
+  const [current, setCurrent] = useState('');
+  const [next, setNext] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (next !== confirm) {
+      setError('New passwords do not match.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await authFetch('/api/users/me/password', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword: current, newPassword: next }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error);
+        return;
+      }
+      setSuccess('Password updated successfully.');
+      setCurrent('');
+      setNext('');
+      setConfirm('');
+    } catch {
+      setError('Could not connect to server. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Card>
+      <h2 className="text-lg font-semibold text-slate-800 mb-5">
+        Change password
+      </h2>
+      <ErrorBanner message={error} className="mb-4" />
+      {success && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700"
+        >
+          ✓ {success}
+        </div>
+      )}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label
+            htmlFor="current-password"
+            className="block text-sm font-medium text-slate-700 mb-1"
+          >
+            Current password
+          </label>
+          <input
+            id="current-password"
+            type="password"
+            value={current}
+            onChange={(e) => setCurrent(e.target.value)}
+            required
+            autoComplete="current-password"
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="new-password"
+            className="block text-sm font-medium text-slate-700 mb-1"
+          >
+            New password
+          </label>
+          <input
+            id="new-password"
+            type="password"
+            value={next}
+            onChange={(e) => setNext(e.target.value)}
+            required
+            autoComplete="new-password"
+            placeholder="Min 8 chars, include a letter and a number"
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="confirm-password"
+            className="block text-sm font-medium text-slate-700 mb-1"
+          >
+            Confirm new password
+          </label>
+          <input
+            id="confirm-password"
+            type="password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            required
+            autoComplete="new-password"
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+          />
+        </div>
+        <Button type="submit" disabled={loading} className="w-full">
+          {loading ? 'Updating…' : 'Update password'}
+        </Button>
+      </form>
+    </Card>
+  );
+}
+
+// ─── Delete Account Dialog ───────────────────────────────────────────────────
+
+function DeleteAccountSection({ authFetch, logout }) {
+  const [confirming, setConfirming] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  async function handleDelete() {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await authFetch('/api/users/me', { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error);
+        return;
+      }
+      logout();
+      navigate('/login');
+    } catch {
+      setError('Could not connect to server. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Card>
+      <h2 className="text-lg font-semibold text-red-700 mb-2">
+        Delete account
+      </h2>
+      <p className="text-sm text-slate-500 mb-4">
+        Permanently deletes your account and anonymises all mood data. This
+        cannot be undone.
+      </p>
+      <ErrorBanner message={error} className="mb-4" />
+      {!confirming ? (
+        <Button variant="danger" onClick={() => setConfirming(true)}>
+          Delete my account
+        </Button>
+      ) : (
+        <div className="space-y-3">
+          <p className="text-sm font-semibold text-red-700">
+            Are you sure? This action is irreversible.
+          </p>
+          <div className="flex gap-3">
+            <Button variant="danger" disabled={loading} onClick={handleDelete}>
+              {loading ? 'Deleting…' : 'Yes, delete my account'}
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => setConfirming(false)}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+// ─── Profile Page ────────────────────────────────────────────────────────────
+
+export default function ProfilePage() {
+  const { user, authFetch, logout } = useAuth();
+  const [exportLoading, setExportLoading] = useState(false);
+  const [exportError, setExportError] = useState('');
+
+  async function handleExport() {
+    setExportLoading(true);
+    setExportError('');
+    try {
+      const res = await authFetch('/api/users/me/export');
+      if (!res.ok) {
+        const data = await res.json();
+        setExportError(data.error);
+        return;
+      }
+      const data = await res.json();
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: 'application/json',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'mindspace-my-data.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setExportError('Could not export data. Please try again.');
+    } finally {
+      setExportLoading(false);
+    }
+  }
+
+  const joinedDate = user?.iat
+    ? new Date(user.iat * 1000).toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+    : null;
+
+  return (
+    <div className="max-w-2xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-900">Your profile</h1>
+        <p className="text-slate-500 mt-1">Manage your account settings.</p>
+      </div>
+
+      {/* Account info */}
+      <Card className="mb-6">
+        <h2 className="text-lg font-semibold text-slate-800 mb-4">
+          Account details
+        </h2>
+        <dl className="space-y-3">
+          <div className="flex items-center justify-between">
+            <dt className="text-sm font-medium text-slate-500">Email</dt>
+            <dd className="text-sm text-slate-800">{user?.email ?? '—'}</dd>
+          </div>
+          <div className="flex items-center justify-between">
+            <dt className="text-sm font-medium text-slate-500">Role</dt>
+            <dd>
+              <span
+                className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                  user?.role === 'admin'
+                    ? 'bg-violet-100 text-violet-700'
+                    : 'bg-indigo-100 text-indigo-700'
+                }`}
+              >
+                {user?.role ?? 'user'}
+              </span>
+            </dd>
+          </div>
+          {joinedDate && (
+            <div className="flex items-center justify-between">
+              <dt className="text-sm font-medium text-slate-500">
+                Token issued
+              </dt>
+              <dd className="text-sm text-slate-800">{joinedDate}</dd>
+            </div>
+          )}
+        </dl>
+
+        {/* Export data */}
+        <div className="mt-5 pt-5 border-t border-slate-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-700">
+                Export my data
+              </p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Download a copy of all your data (GDPR right to portability).
+              </p>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={exportLoading}
+              onClick={handleExport}
+            >
+              {exportLoading ? 'Exporting…' : 'Download JSON'}
+            </Button>
+          </div>
+          {exportError && (
+            <ErrorBanner message={exportError} className="mt-3" />
+          )}
+        </div>
+      </Card>
+
+      {/* Change password */}
+      <div className="mb-6">
+        <ChangePasswordForm authFetch={authFetch} />
+      </div>
+
+      {/* Delete account */}
+      <DeleteAccountSection authFetch={authFetch} logout={logout} />
+    </div>
+  );
+}
