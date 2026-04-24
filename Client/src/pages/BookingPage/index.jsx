@@ -217,6 +217,11 @@ function BookingTab({ authFetch, onBooked }) {
                         <button
                           onClick={() => handleBook(slot)}
                           disabled={submitting !== null}
+                          title={
+                            slot.therapist_email
+                              ? `With ${slot.therapist_email}`
+                              : undefined
+                          }
                           className={`w-full py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                             submitting === slot.id
                               ? 'bg-indigo-200 text-indigo-500 cursor-wait'
@@ -336,6 +341,11 @@ function MyBookingsTab({ authFetch }) {
                     {displayTime(timeKey)} –{' '}
                     {displayTime(
                       `${String(parseInt(timeKey.split(':')[0], 10) + 1).padStart(2, '0')}:00`
+                    )}
+                    {booking.therapist_email && (
+                      <span className="ml-2 text-slate-400">
+                        · {booking.therapist_email}
+                      </span>
                     )}
                   </p>
                 </div>

@@ -13,6 +13,7 @@ const resourcesRoutes = require('./routes/resources');
 const bookingRoutes = require('./routes/booking');
 const adminRoutes = require('./routes/admin');
 const userRoutes = require('./routes/users');
+const therapistRoutes = require('./routes/therapist');
 
 // Fail fast if JWT_SECRET is missing or too short (prevents accidental weak secrets)
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -72,6 +73,7 @@ app.use('/api/resources', resourcesRoutes);
 app.use('/api/booking', bookingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/therapist', therapistRoutes);
 
 // 404 handler
 app.use((req, res) => {
