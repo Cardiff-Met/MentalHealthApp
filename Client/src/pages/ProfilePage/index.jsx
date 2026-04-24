@@ -202,7 +202,11 @@ function DeleteAccountSection({ authFetch, logout }) {
             </Button>
             <Button
               variant="secondary"
-              onClick={() => { setConfirming(false); setPassword(''); setError(''); }}
+              onClick={() => {
+                setConfirming(false);
+                setPassword('');
+                setError('');
+              }}
               disabled={loading}
             >
               Cancel
@@ -265,7 +269,9 @@ export default function ProfilePage() {
   }
 
   const joinedDate = profileData?.created_at
-    ? new Date(String(profileData.created_at).replace(' ', 'T')).toLocaleDateString('en-GB', {
+    ? new Date(
+        String(profileData.created_at).replace(' ', 'T')
+      ).toLocaleDateString('en-GB', {
         day: 'numeric',
         month: 'long',
         year: 'numeric',
