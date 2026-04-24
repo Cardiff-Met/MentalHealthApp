@@ -12,12 +12,19 @@ import { useAuth } from '@/context';
 
 // Lazy-load heavy pages to keep the initial bundle small
 const MoodHistoryPage = lazy(() => import('@/pages/MoodHistoryPage'));
+const TherapistPage = lazy(() => import('@/pages/TherapistPage'));
 
-function ProtectedRoute({ children, adminOnly = false }) {
+function ProtectedRoute({
+  children,
+  adminOnly = false,
+  therapistOnly = false,
+}) {
   const { accessToken, user } = useAuth();
 
   if (!accessToken) return <Navigate to="/login" replace />;
   if (adminOnly && user?.role !== 'admin')
+    return <Navigate to="/dashboard" replace />;
+  if (therapistOnly && user?.role !== 'therapist' && user?.role !== 'admin')
     return <Navigate to="/dashboard" replace />;
 
   return <AppShell>{children}</AppShell>;
@@ -77,8 +84,16 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/therapist"
+          element={
+            <ProtectedRoute therapistOnly>
+              <TherapistPage />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Day 12 — built later */}
+        {/* Day 12 — admin dashboard */}
         <Route
           path="/admin"
           element={

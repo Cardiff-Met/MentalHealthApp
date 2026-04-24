@@ -4,7 +4,13 @@ const db = require('../db/connection');
 async function getSlots(req, res) {
   try {
     const [slots] = await db.query(
-      'SELECT * FROM therapy_slots WHERE status = "available" ORDER BY slot_date, slot_time'
+      `SELECT t.id, t.slot_date, t.slot_time, t.time_of_day, t.status,
+              u.email AS therapist_email, u.name AS therapist_name
+       FROM therapy_slots t
+       LEFT JOIN users u ON t.therapist_id = u.id
+       WHERE t.status = 'available'
+         AND t.therapist_id IS NOT NULL
+       ORDER BY t.slot_date, t.slot_time`
     );
     res.json({ slots });
   } catch (err) {
@@ -61,10 +67,12 @@ async function getMyBookings(req, res) {
 
   try {
     const [bookings] = await db.query(
-      `SELECT b.id, b.status, b.created_at, 
-              t.slot_date, t.slot_time, t.time_of_day
+      `SELECT b.id, b.status, b.created_at,
+              t.slot_date, t.slot_time, t.time_of_day,
+              u.email AS therapist_email, u.name AS therapist_name
        FROM bookings b
        JOIN therapy_slots t ON b.slot_id = t.id
+       LEFT JOIN users u ON t.therapist_id = u.id
        WHERE b.user_id = ?
        ORDER BY b.created_at DESC`,
       [userId]

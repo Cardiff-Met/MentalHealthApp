@@ -8,7 +8,7 @@ const SALT_ROUNDS = 10;
 async function getProfile(req, res) {
   try {
     const [rows] = await db.query(
-      'SELECT id, email, role, created_at FROM users WHERE id = ? AND deleted_at IS NULL',
+      'SELECT id, email, name, role, created_at FROM users WHERE id = ? AND deleted_at IS NULL',
       [req.user.userId]
     );
 
@@ -25,35 +25,43 @@ async function getProfile(req, res) {
 
 // PATCH /api/users/me
 async function updateProfile(req, res) {
-  const { email } = req.body;
+  const { email, name } = req.body;
 
-  if (!email) {
-    return res.status(400).json({ error: 'Email is required.' });
+  if (!email && name === undefined) {
+    return res.status(400).json({ error: 'Provide at least one field to update.' });
   }
 
-  if (!isValidEmail(email)) {
+  if (email && !isValidEmail(email)) {
     return res.status(400).json({ error: 'Invalid email format.' });
   }
 
   try {
-    // Check email not already taken by another account
-    const [existing] = await db.query(
-      'SELECT id FROM users WHERE email = ? AND id != ? AND deleted_at IS NULL',
-      [email, req.user.userId]
-    );
-
-    if (existing.length > 0) {
-      return res.status(409).json({ error: 'That email is already in use.' });
+    if (email) {
+      const [existing] = await db.query(
+        'SELECT id FROM users WHERE email = ? AND id != ? AND deleted_at IS NULL',
+        [email, req.user.userId]
+      );
+      if (existing.length > 0) {
+        return res.status(409).json({ error: 'That email is already in use.' });
+      }
+      await db.query('UPDATE users SET email = ? WHERE id = ? AND deleted_at IS NULL', [
+        email,
+        req.user.userId,
+      ]);
     }
 
-    await db.query('UPDATE users SET email = ? WHERE id = ? AND deleted_at IS NULL', [
-      email,
-      req.user.userId,
-    ]);
+    if (name !== undefined) {
+      const trimmed = name ? String(name).trim().slice(0, 100) : null;
+      await db.query('UPDATE users SET name = ? WHERE id = ? AND deleted_at IS NULL', [
+        trimmed,
+        req.user.userId,
+      ]);
+    }
 
-    const [rows] = await db.query('SELECT id, email, role, created_at FROM users WHERE id = ?', [
-      req.user.userId,
-    ]);
+    const [rows] = await db.query(
+      'SELECT id, email, name, role, created_at FROM users WHERE id = ?',
+      [req.user.userId]
+    );
 
     res.json({ message: 'Profile updated.', user: rows[0] });
   } catch (err) {
@@ -142,7 +150,7 @@ async function deleteAccount(req, res) {
 async function exportData(req, res) {
   try {
     const [users] = await db.query(
-      'SELECT id, email, role, created_at FROM users WHERE id = ? AND deleted_at IS NULL',
+      'SELECT id, email, name, role, created_at FROM users WHERE id = ? AND deleted_at IS NULL',
       [req.user.userId]
     );
 
