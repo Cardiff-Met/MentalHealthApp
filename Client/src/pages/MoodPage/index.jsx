@@ -189,7 +189,10 @@ export default function MoodPage() {
       </div>
 
       {error && (
-        <div className="mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+        <div
+          role="alert"
+          className="mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700"
+        >
           {error}
         </div>
       )}
@@ -197,39 +200,54 @@ export default function MoodPage() {
       <form onSubmit={handleSubmit}>
         {/* Mood selector */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mb-5">
-          <label className="block text-sm font-semibold text-slate-700 mb-4">
-            Select your mood
-          </label>
-          <div className="grid grid-cols-5 gap-3">
-            {MOODS.map(({ rating: r, emoji, label }) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => setRating(r)}
-                className={`flex flex-col items-center gap-1.5 py-4 rounded-xl border-2 transition-all ${
-                  rating === r
-                    ? 'border-indigo-500 bg-indigo-50 shadow-sm'
-                    : 'border-slate-200 hover:border-slate-300 bg-white'
-                }`}
-              >
-                <span className="text-3xl">{emoji}</span>
-                <span
-                  className={`text-xs font-medium ${rating === r ? 'text-indigo-600' : 'text-slate-500'}`}
+          <fieldset>
+            <legend className="block text-sm font-semibold text-slate-700 mb-4">
+              Select your mood
+            </legend>
+            <div
+              className="grid grid-cols-5 gap-3"
+              role="radiogroup"
+              aria-label="Mood rating"
+            >
+              {MOODS.map(({ rating: r, emoji, label }) => (
+                <button
+                  key={r}
+                  type="button"
+                  role="radio"
+                  aria-checked={rating === r}
+                  aria-label={`${label} (${r} out of 5)`}
+                  onClick={() => setRating(r)}
+                  className={`flex flex-col items-center gap-1.5 py-4 rounded-xl border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 ${
+                    rating === r
+                      ? 'border-indigo-500 bg-indigo-50 shadow-sm'
+                      : 'border-slate-200 hover:border-slate-300 bg-white'
+                  }`}
                 >
-                  {label}
-                </span>
-              </button>
-            ))}
-          </div>
+                  <span className="text-3xl" aria-hidden="true">
+                    {emoji}
+                  </span>
+                  <span
+                    className={`text-xs font-medium ${rating === r ? 'text-indigo-600' : 'text-slate-500'}`}
+                  >
+                    {label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </fieldset>
         </div>
 
         {/* Description */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mb-6">
-          <label className="block text-sm font-semibold text-slate-700 mb-2">
+          <label
+            htmlFor="mood-description"
+            className="block text-sm font-semibold text-slate-700 mb-2"
+          >
             Anything you'd like to add?{' '}
             <span className="font-normal text-slate-400">(optional)</span>
           </label>
           <textarea
+            id="mood-description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={4}
@@ -241,6 +259,7 @@ export default function MoodPage() {
         <button
           type="submit"
           disabled={loading}
+          aria-busy={loading}
           className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-semibold rounded-xl text-sm transition-colors shadow-sm"
         >
           {loading ? 'Saving…' : 'Submit mood'}
