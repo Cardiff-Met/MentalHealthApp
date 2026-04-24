@@ -69,9 +69,7 @@ async function runMigrations() {
     }
 
     // Migration 004 — seed therapy slots if table is empty
-    const [[{ cnt }]] = await db.query(
-      'SELECT COUNT(*) AS cnt FROM therapy_slots'
-    );
+    const [[{ cnt }]] = await db.query('SELECT COUNT(*) AS cnt FROM therapy_slots');
     if (cnt === 0) {
       // Generate 3 weeks of slots (Mon–Fri, morning / afternoon / evening)
       const slots = [];
@@ -90,10 +88,9 @@ async function runMigrations() {
           );
         }
       }
-      await db.query(
-        'INSERT INTO therapy_slots (slot_date, slot_time, time_of_day) VALUES ?',
-        [slots]
-      );
+      await db.query('INSERT INTO therapy_slots (slot_date, slot_time, time_of_day) VALUES ?', [
+        slots,
+      ]);
       console.log(`[migrate] Seeded ${slots.length} therapy slots`);
     }
 
