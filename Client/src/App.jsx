@@ -5,6 +5,7 @@ import DashboardPage from '@/pages/DashboardPage';
 import MoodPage from '@/pages/MoodPage';
 import ResourcesPage from '@/pages/ResourcesPage';
 import BookingPage from '@/pages/BookingPage';
+import ProfilePage from '@/pages/ProfilePage';
 import { useAuth } from '@/context';
 
 function ProtectedRoute({ children, adminOnly = false }) {
@@ -55,14 +56,11 @@ export default function App() {
         }
       />
 
-      {/* Day 9 — built next */}
       <Route
         path="/profile"
         element={
           <ProtectedRoute>
-            <div className="text-slate-500 py-10 text-center">
-              Profile page coming soon.
-            </div>
+            <ProfilePage />
           </ProtectedRoute>
         }
       />
