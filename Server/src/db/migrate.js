@@ -68,6 +68,35 @@ async function runMigrations() {
       console.log('[migrate] Added column resources.max_mood');
     }
 
+    // Migration 004 — seed therapy slots if table is empty
+    const [[{ cnt }]] = await db.query(
+      'SELECT COUNT(*) AS cnt FROM therapy_slots'
+    );
+    if (cnt === 0) {
+      // Generate 3 weeks of slots (Mon–Fri, morning / afternoon / evening)
+      const slots = [];
+      const today = new Date();
+      for (let week = 1; week <= 3; week++) {
+        for (let dow = 1; dow <= 5; dow++) {
+          // Find the next occurrence of this day-of-week
+          const d = new Date(today);
+          const diff = (dow - d.getDay() + 7) % 7 || 7;
+          d.setDate(d.getDate() + diff + (week - 1) * 7);
+          const dateStr = d.toISOString().slice(0, 10);
+          slots.push(
+            [dateStr, '09:00:00', 'morning'],
+            [dateStr, '13:00:00', 'afternoon'],
+            [dateStr, '17:00:00', 'evening']
+          );
+        }
+      }
+      await db.query(
+        'INSERT INTO therapy_slots (slot_date, slot_time, time_of_day) VALUES ?',
+        [slots]
+      );
+      console.log(`[migrate] Seeded ${slots.length} therapy slots`);
+    }
+
     console.log('[migrate] Schema up to date');
   } catch (err) {
     console.error('[migrate] Migration failed:', err.message);

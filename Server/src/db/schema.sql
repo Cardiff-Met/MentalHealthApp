@@ -107,6 +107,23 @@ INSERT INTO resources (title, description, url, category, min_mood, max_mood) VA
   ('NHS – Sleep and Tiredness Tips',   'Advice on improving sleep quality and managing fatigue.',    'https://www.nhs.uk/live-well/sleep',     'self-help',   3, 5),
   ('Headspace – Meditation',           'Guided meditation for stress relief and improved focus.',    'https://www.headspace.com',              'mindfulness', 4, 5);
 
+-- Seed therapy slots (3 weeks of Mon–Fri, morning / afternoon / evening)
+INSERT INTO therapy_slots (slot_date, slot_time, time_of_day) VALUES
+  ('2026-04-27','09:00:00','morning'),  ('2026-04-27','13:00:00','afternoon'), ('2026-04-27','17:00:00','evening'),
+  ('2026-04-28','09:00:00','morning'),  ('2026-04-28','13:00:00','afternoon'), ('2026-04-28','17:00:00','evening'),
+  ('2026-04-29','09:00:00','morning'),  ('2026-04-29','13:00:00','afternoon'), ('2026-04-29','17:00:00','evening'),
+  ('2026-04-30','09:00:00','morning'),  ('2026-04-30','13:00:00','afternoon'), ('2026-04-30','17:00:00','evening'),
+  ('2026-05-01','09:00:00','morning'),  ('2026-05-01','13:00:00','afternoon'), ('2026-05-01','17:00:00','evening'),
+  ('2026-05-06','09:00:00','morning'),  ('2026-05-06','13:00:00','afternoon'), ('2026-05-06','17:00:00','evening'),
+  ('2026-05-07','09:00:00','morning'),  ('2026-05-07','13:00:00','afternoon'), ('2026-05-07','17:00:00','evening'),
+  ('2026-05-08','09:00:00','morning'),  ('2026-05-08','13:00:00','afternoon'), ('2026-05-08','17:00:00','evening'),
+  ('2026-05-09','09:00:00','morning'),  ('2026-05-09','13:00:00','afternoon'), ('2026-05-09','17:00:00','evening'),
+  ('2026-05-12','09:00:00','morning'),  ('2026-05-12','13:00:00','afternoon'), ('2026-05-12','17:00:00','evening'),
+  ('2026-05-13','09:00:00','morning'),  ('2026-05-13','13:00:00','afternoon'), ('2026-05-13','17:00:00','evening'),
+  ('2026-05-14','09:00:00','morning'),  ('2026-05-14','13:00:00','afternoon'), ('2026-05-14','17:00:00','evening'),
+  ('2026-05-15','09:00:00','morning'),  ('2026-05-15','13:00:00','afternoon'), ('2026-05-15','17:00:00','evening'),
+  ('2026-05-16','09:00:00','morning'),  ('2026-05-16','13:00:00','afternoon'), ('2026-05-16','17:00:00','evening');
+
 -- Seed admin user (password: Admin1234! — bcrypt hash, 10 rounds)
 INSERT IGNORE INTO users (email, password, role) VALUES
   ('admin@cardiffmet.ac.uk', '$2b$10$9z47CH5TqyvEOq0zC3f7NOQKV6adjALvgrhL2YO/jS1TqzlijBOp6', 'admin');
