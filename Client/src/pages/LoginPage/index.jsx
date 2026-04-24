@@ -63,35 +63,49 @@ export default function LoginPage() {
           </h2>
 
           {error && (
-            <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            <div
+              role="alert"
+              aria-live="assertive"
+              className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700"
+            >
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label
+                htmlFor="login-email"
+                className="block text-sm font-medium text-slate-700 mb-1"
+              >
                 Email address
               </label>
               <input
+                id="login-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="email"
                 placeholder="you@cardiffmet.ac.uk"
                 className="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label
+                htmlFor="login-password"
+                className="block text-sm font-medium text-slate-700 mb-1"
+              >
                 Password
               </label>
               <input
+                id="login-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete={isRegister ? 'new-password' : 'current-password'}
                 placeholder={isRegister ? 'Minimum 8 characters' : '••••••••'}
                 className="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
               />
@@ -100,6 +114,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
+              aria-busy={loading}
               className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-semibold rounded-lg text-sm transition-colors shadow-sm"
             >
               {loading
@@ -117,7 +132,8 @@ export default function LoginPage() {
                 setIsRegister(!isRegister);
                 setError('');
               }}
-              className="font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
+              aria-pressed={isRegister}
+              className="font-medium text-indigo-600 hover:text-indigo-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
             >
               {isRegister ? 'Sign in' : 'Register'}
             </button>
