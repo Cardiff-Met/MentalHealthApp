@@ -4,7 +4,7 @@ const db = require('../db/connection');
 async function listUsers(req, res) {
   try {
     const [users] = await db.query(
-      'SELECT id, email, role, created_at, deleted_at FROM users ORDER BY created_at DESC'
+      'SELECT id, email, name, role, created_at, deleted_at FROM users ORDER BY created_at DESC'
     );
     res.json({ users });
   } catch (err) {
@@ -100,6 +100,35 @@ async function deleteResource(req, res) {
   }
 }
 
+// PATCH /api/admin/users/:id/role
+async function updateUserRole(req, res) {
+  const userId = parseInt(req.params.id, 10);
+  const { role } = req.body;
+
+  if (!['user', 'therapist', 'admin'].includes(role)) {
+    return res.status(400).json({ error: 'role must be "user", "therapist", or "admin".' });
+  }
+
+  if (userId === req.user.userId) {
+    return res.status(400).json({ error: 'You cannot change your own role.' });
+  }
+
+  try {
+    const [rows] = await db.query('SELECT id FROM users WHERE id = ? AND deleted_at IS NULL', [
+      userId,
+    ]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    await db.query('UPDATE users SET role = ? WHERE id = ?', [role, userId]);
+    res.json({ message: `User role updated to ${role}.` });
+  } catch (err) {
+    console.error('Admin update role error:', err);
+    res.status(500).json({ error: 'Failed to update role.' });
+  }
+}
+
 // GET /api/admin/bookings
 async function listBookings(req, res) {
   try {
@@ -167,6 +196,7 @@ async function updateBooking(req, res) {
 
 module.exports = {
   listUsers,
+  updateUserRole,
   listResources,
   createResource,
   updateResource,

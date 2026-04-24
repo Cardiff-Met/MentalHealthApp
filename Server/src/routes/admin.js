@@ -4,6 +4,7 @@ const authenticateToken = require('../middleware/auth');
 const requireAdmin = require('../middleware/requireAdmin');
 const {
   listUsers,
+  updateUserRole,
   listResources,
   createResource,
   updateResource,
@@ -31,6 +32,7 @@ router.use(authenticateToken, requireAdmin);
  *         description: Admin role required
  */
 router.get('/users', listUsers);
+router.patch('/users/:id/role', updateUserRole);
 
 /**
  * @swagger

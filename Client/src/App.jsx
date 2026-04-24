@@ -13,6 +13,7 @@ import { useAuth } from '@/context';
 // Lazy-load heavy pages to keep the initial bundle small
 const MoodHistoryPage = lazy(() => import('@/pages/MoodHistoryPage'));
 const TherapistPage = lazy(() => import('@/pages/TherapistPage'));
+const AdminPage = lazy(() => import('@/pages/AdminPage'));
 
 function ProtectedRoute({
   children,
@@ -93,14 +94,11 @@ export default function App() {
           }
         />
 
-        {/* Day 12 — admin dashboard */}
         <Route
           path="/admin"
           element={
             <ProtectedRoute adminOnly>
-              <div className="text-slate-500 py-10 text-center">
-                Admin dashboard coming soon.
-              </div>
+              <AdminPage />
             </ProtectedRoute>
           }
         />
