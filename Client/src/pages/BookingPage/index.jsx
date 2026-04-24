@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context';
+import Card from '@/components/Card';
+import Button from '@/components/Button';
+import ErrorBanner from '@/components/ErrorBanner';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import EmptyState from '@/components/EmptyState';
 
-const FILTERS = ['all', 'morning', 'afternoon', 'evening'];
+const SLOT_FILTERS = ['all', 'morning', 'afternoon', 'evening'];
 
 const TIME_ICONS = {
   morning: '🌅',
@@ -10,8 +15,18 @@ const TIME_ICONS = {
   evening: '🌙',
 };
 
+const STATUS_STYLES = {
+  pending: 'bg-amber-50 text-amber-700 border-amber-200',
+  confirmed: 'bg-green-50 text-green-700 border-green-200',
+  declined: 'bg-red-50 text-red-700 border-red-200',
+};
+
 function formatDate(dateStr) {
-  const date = new Date(dateStr);
+  if (!dateStr) return '—';
+  // Ensure MySQL "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS" parse correctly
+  const safe = String(dateStr).replace(' ', 'T');
+  const date = new Date(safe);
+  if (isNaN(date)) return '—';
   return date.toLocaleDateString('en-GB', {
     weekday: 'long',
     day: 'numeric',
@@ -20,6 +35,7 @@ function formatDate(dateStr) {
 }
 
 function formatTime(timeStr) {
+  if (!timeStr) return '—';
   const [h, m] = timeStr.split(':');
   const hour = parseInt(h, 10);
   const ampm = hour >= 12 ? 'pm' : 'am';
@@ -27,16 +43,14 @@ function formatTime(timeStr) {
   return `${display}:${m} ${ampm}`;
 }
 
-export default function BookingPage() {
+// ─── Book a Session tab ───────────────────────────────────────────────────────
+
+function BookingTab({ authFetch, onBooked }) {
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all');
-  const [bookingStatus, setBookingStatus] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-
-  const { authFetch } = useAuth();
-  const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchSlots() {
@@ -71,7 +85,7 @@ export default function BookingPage() {
         setError(data.error);
         return;
       }
-      setBookingStatus(data);
+      onBooked(data);
     } catch {
       setError('Could not submit booking. Please try again.');
     } finally {
@@ -82,7 +96,186 @@ export default function BookingPage() {
   const filteredSlots =
     filter === 'all' ? slots : slots.filter((s) => s.time_of_day === filter);
 
-  // Booking confirmation
+  if (loading) return <LoadingSpinner message="Loading available slots…" />;
+
+  return (
+    <>
+      <ErrorBanner message={error} className="mb-6" />
+
+      {/* Time-of-day filter chips */}
+      <div className="flex gap-2 mb-6 flex-wrap">
+        {SLOT_FILTERS.map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              filter === f
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'
+            }`}
+          >
+            {f !== 'all' && <span className="mr-1.5">{TIME_ICONS[f]}</span>}
+            {f.charAt(0).toUpperCase() + f.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {filteredSlots.length === 0 ? (
+        <EmptyState
+          icon="📭"
+          title="No slots available"
+          message="No slots available for this time period. Try a different filter."
+        />
+      ) : (
+        <div className="space-y-3">
+          {filteredSlots.map((slot) => (
+            <Card
+              key={slot.id}
+              className="flex items-center justify-between gap-4"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center text-xl shrink-0">
+                  {TIME_ICONS[slot.time_of_day] || '📅'}
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-800">
+                    {formatDate(slot.slot_date)}
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    {formatTime(slot.slot_time)} ·{' '}
+                    <span className="capitalize">{slot.time_of_day}</span>
+                  </p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => handleBook(slot.id)}
+                disabled={submitting}
+              >
+                {submitting ? 'Booking…' : 'Request'}
+              </Button>
+            </Card>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+// ─── My Bookings tab ─────────────────────────────────────────────────────────
+
+function MyBookingsTab({ authFetch }) {
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [cancellingId, setCancellingId] = useState(null);
+
+  useEffect(() => {
+    async function fetchBookings() {
+      try {
+        const res = await authFetch('/api/booking/my');
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error);
+          return;
+        }
+        setBookings(data.bookings ?? []);
+      } catch {
+        setError('Could not load your bookings.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchBookings();
+  }, [authFetch]);
+
+  async function handleCancel(id) {
+    setCancellingId(id);
+    setError('');
+    try {
+      const res = await authFetch(`/api/booking/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setBookings((prev) => prev.filter((b) => b.id !== id));
+      } else {
+        const data = await res.json();
+        setError(data.error);
+      }
+    } catch {
+      setError('Could not cancel booking. Please try again.');
+    } finally {
+      setCancellingId(null);
+    }
+  }
+
+  if (loading) return <LoadingSpinner message="Loading your bookings…" />;
+
+  return (
+    <>
+      <ErrorBanner message={error} className="mb-6" />
+      {bookings.length === 0 ? (
+        <EmptyState
+          icon="📅"
+          title="No bookings yet"
+          message="Your booked therapy sessions will appear here once you've made a request."
+        />
+      ) : (
+        <div className="space-y-3">
+          {bookings.map((booking) => (
+            <Card
+              key={booking.id}
+              className="flex items-center justify-between gap-4"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center text-xl shrink-0">
+                  {TIME_ICONS[booking.time_of_day] || '📅'}
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-800">
+                    {formatDate(booking.slot_date)}
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    {formatTime(booking.slot_time)} ·{' '}
+                    <span className="capitalize">{booking.time_of_day}</span>
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <span
+                  className={`text-xs font-semibold px-2.5 py-1 rounded-full border capitalize ${
+                    STATUS_STYLES[booking.status] ??
+                    'bg-slate-50 text-slate-600 border-slate-200'
+                  }`}
+                >
+                  {booking.status}
+                </span>
+                {booking.status === 'pending' && (
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    disabled={cancellingId === booking.id}
+                    onClick={() => handleCancel(booking.id)}
+                  >
+                    {cancellingId === booking.id ? 'Cancelling…' : 'Cancel'}
+                  </Button>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+export default function BookingPage() {
+  const { authFetch } = useAuth();
+  const navigate = useNavigate();
+  const [tab, setTab] = useState('book');
+  const [bookingStatus, setBookingStatus] = useState(null);
+
+  // Booking confirmation screen
   if (bookingStatus) {
     return (
       <div className="max-w-xl mx-auto text-center py-16">
@@ -100,22 +293,18 @@ export default function BookingPage() {
         <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 text-sm text-amber-800 mb-8">
           Please check your email for updates on your appointment.
         </div>
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="px-8 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm transition-colors"
-        >
-          Back to dashboard
-        </button>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-24">
-        <div className="text-center">
-          <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-slate-500">Loading available slots…</p>
+        <div className="flex gap-3 justify-center">
+          <Button
+            onClick={() => {
+              setBookingStatus(null);
+              setTab('my');
+            }}
+          >
+            View my bookings
+          </Button>
+          <Button variant="secondary" onClick={() => navigate('/dashboard')}>
+            Back to dashboard
+          </Button>
         </div>
       </div>
     );
@@ -124,75 +313,36 @@ export default function BookingPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">
-          Book a Therapy Session
-        </h1>
+        <h1 className="text-3xl font-bold text-slate-900">Therapy Sessions</h1>
         <p className="text-slate-500 mt-1">
-          Select an available slot to request an appointment.
+          Book an appointment with the Cardiff Met wellbeing team.
         </p>
       </div>
 
-      {error && (
-        <div className="mb-6 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-          {error}
-        </div>
-      )}
-
-      {/* Filter tabs */}
-      <div className="flex gap-2 mb-6">
-        {FILTERS.map((f) => (
+      {/* Tab bar */}
+      <div className="flex gap-1 mb-6 border-b border-slate-200">
+        {[
+          { key: 'book', label: '📅 Book a session' },
+          { key: 'my', label: '🗂 My bookings' },
+        ].map(({ key, label }) => (
           <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
-              filter === f
-                ? 'bg-indigo-600 text-white shadow-sm'
-                : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'
+            key={key}
+            onClick={() => setTab(key)}
+            className={`px-5 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              tab === key
+                ? 'border-indigo-600 text-indigo-600'
+                : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
           >
-            {f !== 'all' && <span className="mr-1.5">{TIME_ICONS[f]}</span>}
-            {f.charAt(0).toUpperCase() + f.slice(1)}
+            {label}
           </button>
         ))}
       </div>
 
-      {/* Slot list */}
-      {filteredSlots.length === 0 ? (
-        <div className="text-center py-16 text-slate-400">
-          <p className="text-4xl mb-3">📭</p>
-          <p className="text-sm">No slots available for this time period.</p>
-        </div>
+      {tab === 'book' ? (
+        <BookingTab authFetch={authFetch} onBooked={setBookingStatus} />
       ) : (
-        <div className="space-y-3">
-          {filteredSlots.map((slot) => (
-            <div
-              key={slot.id}
-              className="bg-white border border-slate-200 rounded-xl px-5 py-4 flex items-center justify-between shadow-sm"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center text-xl">
-                  {TIME_ICONS[slot.time_of_day] || '📅'}
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-800">
-                    {formatDate(slot.slot_date)}
-                  </p>
-                  <p className="text-sm text-slate-500">
-                    {formatTime(slot.slot_time)} ·{' '}
-                    <span className="capitalize">{slot.time_of_day}</span>
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => handleBook(slot.id)}
-                disabled={submitting}
-                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg transition-colors"
-              >
-                {submitting ? 'Booking…' : 'Request'}
-              </button>
-            </div>
-          ))}
-        </div>
+        <MyBookingsTab authFetch={authFetch} />
       )}
     </div>
   );
