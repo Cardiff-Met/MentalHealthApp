@@ -1,4 +1,6 @@
 import { useNavigate } from 'react-router-dom';
+import Card from '@/components/Card';
+import Button from '@/components/Button';
 
 const features = [
   {
@@ -10,7 +12,7 @@ const features = [
     label: 'Log mood',
     colour: 'bg-indigo-50 border-indigo-100',
     iconBg: 'bg-indigo-100',
-    btnColour: 'bg-indigo-600 hover:bg-indigo-700',
+    btnVariant: 'primary',
   },
   {
     icon: '📚',
@@ -21,7 +23,8 @@ const features = [
     label: 'View resources',
     colour: 'bg-teal-50 border-teal-100',
     iconBg: 'bg-teal-100',
-    btnColour: 'bg-teal-600 hover:bg-teal-700',
+    btnVariant: 'ghost',
+    btnClass: 'bg-teal-600 hover:bg-teal-700 text-white',
   },
   {
     icon: '📅',
@@ -32,7 +35,8 @@ const features = [
     label: 'Book now',
     colour: 'bg-purple-50 border-purple-100',
     iconBg: 'bg-purple-100',
-    btnColour: 'bg-purple-600 hover:bg-purple-700',
+    btnVariant: 'ghost',
+    btnClass: 'bg-purple-600 hover:bg-purple-700 text-white',
   },
 ];
 
@@ -48,8 +52,13 @@ export default function DashboardPage() {
       </div>
 
       {/* Crisis banner */}
-      <div className="mb-8 flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-5 py-4">
-        <span className="text-xl mt-0.5">🆘</span>
+      <div
+        role="alert"
+        className="mb-8 flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-5 py-4"
+      >
+        <span className="text-xl mt-0.5" aria-hidden="true">
+          🆘
+        </span>
         <div>
           <p className="text-sm font-semibold text-red-800">
             In crisis right now?
@@ -78,6 +87,7 @@ export default function DashboardPage() {
           >
             <div
               className={`inline-flex items-center justify-center w-12 h-12 rounded-xl text-2xl mb-4 ${f.iconBg}`}
+              aria-hidden="true"
             >
               {f.icon}
             </div>
@@ -85,17 +95,28 @@ export default function DashboardPage() {
               {f.title}
             </h2>
             <p className="text-sm text-slate-600 flex-1">{f.description}</p>
-            <button
+            <Button
               onClick={() => navigate(f.action)}
-              className={`mt-5 w-full py-2 rounded-lg text-sm font-semibold text-white transition-colors ${f.btnColour}`}
+              className={`mt-5 w-full ${f.btnClass ?? ''}`}
+              variant={f.btnVariant}
             >
               {f.label}
-            </button>
+            </Button>
           </div>
         ))}
       </div>
 
-      <p className="text-center text-xs text-slate-400 mt-10">
+      {/* Mood history link */}
+      <div className="mt-8 text-center">
+        <button
+          onClick={() => navigate('/mood/history')}
+          className="text-sm text-indigo-600 hover:text-indigo-700 font-medium underline-offset-2 hover:underline transition-colors"
+        >
+          View your mood history →
+        </button>
+      </div>
+
+      <p className="text-center text-xs text-slate-400 mt-6">
         All information you share is kept private and secure.
       </p>
     </div>

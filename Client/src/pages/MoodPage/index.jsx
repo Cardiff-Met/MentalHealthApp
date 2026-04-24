@@ -110,7 +110,7 @@ export default function MoodPage() {
             ))}
           </ul>
           <button
-            onClick={() => setResult(null)}
+            onClick={() => navigate('/resources')}
             className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg text-sm transition-colors"
           >
             I understand — show me resources
