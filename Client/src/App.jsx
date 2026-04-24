@@ -1,10 +1,5 @@
-import {
-  Routes,
-  Route,
-  Navigate,
-  NavLink,
-  useNavigate,
-} from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import AppShell from '@/components/AppShell';
 import LoginPage from '@/pages/LoginPage';
 import DashboardPage from '@/pages/DashboardPage';
 import MoodPage from '@/pages/MoodPage';
@@ -12,67 +7,21 @@ import ResourcesPage from '@/pages/ResourcesPage';
 import BookingPage from '@/pages/BookingPage';
 import { useAuth } from '@/context';
 
-function Layout({ children }) {
-  const { logout } = useAuth();
-  const navigate = useNavigate();
+function ProtectedRoute({ children, adminOnly = false }) {
+  const { accessToken, user } = useAuth();
 
-  function handleLogout() {
-    logout();
-    navigate('/login');
-  }
+  if (!accessToken) return <Navigate to="/login" replace />;
+  if (adminOnly && user?.role !== 'admin')
+    return <Navigate to="/dashboard" replace />;
 
-  const navLink = ({ isActive }) =>
-    `text-sm font-medium transition-colors ${
-      isActive ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-900'
-    }`;
-
-  return (
-    <div className="min-h-screen bg-slate-50">
-      <nav className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">🧠</span>
-            <span className="font-bold text-slate-800 tracking-tight">
-              MindSpace
-            </span>
-          </div>
-          <div className="flex items-center gap-6">
-            <NavLink to="/dashboard" className={navLink}>
-              Home
-            </NavLink>
-            <NavLink to="/mood" className={navLink}>
-              Mood
-            </NavLink>
-            <NavLink to="/resources" className={navLink}>
-              Resources
-            </NavLink>
-            <NavLink to="/booking" className={navLink}>
-              Book Session
-            </NavLink>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="text-sm font-medium text-slate-500 hover:text-red-500 transition-colors"
-          >
-            Log out
-          </button>
-        </div>
-      </nav>
-      <main className="max-w-5xl mx-auto px-6 py-10">{children}</main>
-    </div>
-  );
-}
-
-function ProtectedRoute({ children }) {
-  const token = localStorage.getItem('accessToken');
-  if (!token) return <Navigate to="/login" />;
-  return <Layout>{children}</Layout>;
+  return <AppShell>{children}</AppShell>;
 }
 
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+
       <Route
         path="/dashboard"
         element={
@@ -105,7 +54,32 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      <Route path="*" element={<Navigate to="/login" />} />
+
+      {/* Day 9 — built next */}
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <div className="text-slate-500 py-10 text-center">
+              Profile page coming soon.
+            </div>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Day 12 — built later */}
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute adminOnly>
+            <div className="text-slate-500 py-10 text-center">
+              Admin dashboard coming soon.
+            </div>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }
