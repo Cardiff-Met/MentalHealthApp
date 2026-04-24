@@ -1,0 +1,65 @@
+/* MindSpace Design Tokens
+   Referenced from index.css — use these vars everywhere instead of raw Tailwind colours
+   so the palette can be changed in one place. */
+
+:root {
+  /* Brand colours */
+  --color-primary: #4f46e5; /* indigo-600 */
+  --color-primary-hover: #4338ca; /* indigo-700 */
+  --color-primary-light: #eef2ff; /* indigo-50 */
+
+  --color-secondary: #7c3aed; /* violet-600 */
+  --color-secondary-hover: #6d28d9; /* violet-700 */
+
+  --color-accent: #0d9488; /* teal-600 */
+  --color-accent-hover: #0f766e; /* teal-700 */
+
+  /* Danger / crisis */
+  --color-danger: #dc2626; /* red-600 */
+  --color-danger-bg: #fef2f2; /* red-50 */
+  --color-danger-border: #fecaca; /* red-200 */
+
+  /* Neutrals */
+  --color-bg: #f8fafc; /* slate-50 */
+  --color-surface: #ffffff;
+  --color-border: #e2e8f0; /* slate-200 */
+  --color-text: #0f172a; /* slate-900 */
+  --color-text-muted: #64748b; /* slate-500 */
+  --color-text-subtle: #94a3b8; /* slate-400 */
+
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+
+  /* Typography */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+
+  /* Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-xl:
+    0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* Nav */
+  --nav-height: 4rem;
+}

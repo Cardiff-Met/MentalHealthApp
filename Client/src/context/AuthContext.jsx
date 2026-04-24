@@ -1,10 +1,23 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { AuthContext } from './authContext';
+
+/** Decode a JWT payload without verifying the signature (client-side only). */
+function decodeToken(token) {
+  try {
+    const payload = token.split('.')[1];
+    return JSON.parse(atob(payload));
+  } catch {
+    return null;
+  }
+}
 
 export function AuthProvider({ children }) {
   const [accessToken, setAccessToken] = useState(
     localStorage.getItem('accessToken') || null
   );
+
+  // Derived user object from the JWT payload (userId, email, role)
+  const user = useMemo(() => decodeToken(accessToken), [accessToken]);
 
   function login(newAccessToken) {
     localStorage.setItem('accessToken', newAccessToken);
@@ -22,7 +35,7 @@ export function AuthProvider({ children }) {
     try {
       const res = await fetch('/api/auth/refresh', {
         method: 'POST',
-        credentials: 'include', // sends the httpOnly cookie
+        credentials: 'include',
       });
 
       if (!res.ok) {
@@ -40,7 +53,7 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  // Wrapper around fetch that automatically refreshes token on 403
+  // Wrapper around fetch that auto-refreshes on 403
   const authFetch = useCallback(
     async (url, options = {}) => {
       const token = localStorage.getItem('accessToken');
@@ -54,7 +67,6 @@ export function AuthProvider({ children }) {
         },
       });
 
-      // If token expired, try to refresh and retry the request once
       if (response.status === 403) {
         const newToken = await refreshAccessToken();
         if (!newToken) return response;
@@ -75,7 +87,9 @@ export function AuthProvider({ children }) {
   );
 
   return (
-    <AuthContext.Provider value={{ accessToken, login, logout, authFetch }}>
+    <AuthContext.Provider
+      value={{ accessToken, user, login, logout, authFetch }}
+    >
       {children}
     </AuthContext.Provider>
   );
