@@ -59,7 +59,7 @@ export default function AppShell({ children }) {
               <NavLink to="/profile" className={navLinkClass}>
                 Profile
               </NavLink>
-              {isTherapist && (
+              {(isTherapist || isAdmin) && (
                 <NavLink
                   to="/therapist"
                   className={({ isActive }) =>
@@ -89,7 +89,7 @@ export default function AppShell({ children }) {
 
             {/* Right side */}
             <div className="flex items-center gap-3">
-              {isTherapist && (
+              {(isTherapist || isAdmin) && (
                 <span className="text-xs font-semibold px-2 py-0.5 bg-teal-100 text-teal-700 rounded-full">
                   Therapist
                 </span>
