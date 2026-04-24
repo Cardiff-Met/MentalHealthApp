@@ -26,10 +26,11 @@ const MOOD_LABEL = {
 };
 
 function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-  });
+  if (!dateStr) return '—';
+  // MySQL returns "YYYY-MM-DD HH:MM:SS" — replace space with T so all browsers parse it correctly
+  const date = new Date(String(dateStr).replace(' ', 'T'));
+  if (isNaN(date)) return '—';
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }
 
 // Custom tooltip for the chart
@@ -78,7 +79,7 @@ export default function MoodHistoryPage() {
     .slice(0, 30)
     .reverse()
     .map((log) => ({
-      date: formatDate(log.created_at),
+      date: formatDate(log.logged_at),
       rating: log.rating,
     }));
 
@@ -171,7 +172,7 @@ export default function MoodHistoryPage() {
                       </span>
                     </span>
                     <span className="text-xs text-slate-400 shrink-0">
-                      {formatDate(log.created_at)}
+                      {formatDate(log.logged_at)}
                     </span>
                   </div>
                   {log.description && (
