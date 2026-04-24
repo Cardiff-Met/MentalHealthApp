@@ -162,6 +162,12 @@ async function runMigrations() {
       console.log(`[migrate] Replaced legacy slots with ${slots.length} 1-hour slots`);
     }
 
+    // Migration 010 — add name column to users
+    if (!(await columnExists('users', 'name'))) {
+      await db.query(`ALTER TABLE users ADD COLUMN name VARCHAR(100) NULL AFTER email`);
+      console.log('[migrate] Added column users.name');
+    }
+
     console.log('[migrate] Schema up to date');
   } catch (err) {
     console.error('[migrate] Migration failed:', err.message);

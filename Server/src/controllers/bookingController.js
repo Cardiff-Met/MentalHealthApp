@@ -5,7 +5,7 @@ async function getSlots(req, res) {
   try {
     const [slots] = await db.query(
       `SELECT t.id, t.slot_date, t.slot_time, t.time_of_day, t.status,
-              u.email AS therapist_email
+              u.email AS therapist_email, u.name AS therapist_name
        FROM therapy_slots t
        LEFT JOIN users u ON t.therapist_id = u.id
        WHERE t.status = 'available'
@@ -69,7 +69,7 @@ async function getMyBookings(req, res) {
     const [bookings] = await db.query(
       `SELECT b.id, b.status, b.created_at,
               t.slot_date, t.slot_time, t.time_of_day,
-              u.email AS therapist_email
+              u.email AS therapist_email, u.name AS therapist_name
        FROM bookings b
        JOIN therapy_slots t ON b.slot_id = t.id
        LEFT JOIN users u ON t.therapist_id = u.id
