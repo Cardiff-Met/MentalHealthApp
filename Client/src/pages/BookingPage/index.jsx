@@ -164,109 +164,111 @@ function BookingTab({ authFetch, onBooked }) {
       </div>
 
       {/* Calendar grid */}
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-        {/* Day headers */}
-        <div className="grid grid-cols-6 border-b border-slate-100">
-          <div className="py-3 px-3 text-xs font-medium text-slate-400" />
-          {days.map((d, i) => {
-            const isToday = toDateKey(d) === toDateKey(today);
+      <div className="overflow-x-auto rounded-2xl shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden min-w-[560px]">
+          {/* Day headers */}
+          <div className="grid grid-cols-6 border-b border-slate-100">
+            <div className="py-3 px-3 text-xs font-medium text-slate-400" />
+            {days.map((d, i) => {
+              const isToday = toDateKey(d) === toDateKey(today);
+              return (
+                <div
+                  key={i}
+                  className="py-3 text-center border-l border-slate-100"
+                >
+                  <p
+                    className={`text-xs font-semibold ${isToday ? 'text-indigo-600' : 'text-slate-500'}`}
+                  >
+                    {DAY_LABELS[i]}
+                  </p>
+                  <p
+                    className={`text-sm font-bold mt-0.5 ${isToday ? 'text-indigo-600' : 'text-slate-800'}`}
+                  >
+                    {d.getDate()}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Time rows */}
+          {ALL_SLOTS.map((time, idx) => {
+            const isMorningEnd = idx === MORNING_SLOTS.length - 1;
             return (
-              <div
-                key={i}
-                className="py-3 text-center border-l border-slate-100"
-              >
-                <p
-                  className={`text-xs font-semibold ${isToday ? 'text-indigo-600' : 'text-slate-500'}`}
+              <>
+                <div
+                  key={time}
+                  className={`grid grid-cols-6 ${isMorningEnd ? '' : 'border-b border-slate-50'}`}
                 >
-                  {DAY_LABELS[i]}
-                </p>
-                <p
-                  className={`text-sm font-bold mt-0.5 ${isToday ? 'text-indigo-600' : 'text-slate-800'}`}
-                >
-                  {d.getDate()}
-                </p>
-              </div>
+                  <div className="py-3 px-3 flex items-center">
+                    <span className="text-xs text-slate-400 font-medium tabular-nums">
+                      {displayTime(time)}
+                    </span>
+                  </div>
+                  {days.map((d, di) => {
+                    const dateKey = toDateKey(d);
+                    const slot = slotMap[dateKey]?.[time];
+                    const isPast = d < today;
+                    return (
+                      <div
+                        key={di}
+                        className="py-2 px-1.5 border-l border-slate-100 flex items-center justify-center"
+                      >
+                        {slot && !isPast ? (
+                          <button
+                            onClick={() => handleBook(slot)}
+                            disabled={submitting !== null}
+                            className={`w-full py-1.5 px-1 rounded-lg text-xs font-semibold transition-colors leading-tight ${
+                              submitting === slot.id
+                                ? 'bg-indigo-200 text-indigo-500 cursor-wait'
+                                : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white'
+                            }`}
+                          >
+                            {submitting === slot.id ? (
+                              '…'
+                            ) : (
+                              <>
+                                <span className="block">Book</span>
+                                <span
+                                  className="block font-normal text-indigo-400 truncate"
+                                  style={{ fontSize: '0.6rem' }}
+                                >
+                                  {slot.therapist_name ||
+                                    slot.therapist_email?.split('@')[0]}
+                                </span>
+                              </>
+                            )}
+                          </button>
+                        ) : (
+                          <span className="w-full py-1.5 rounded-lg text-xs text-center text-slate-200 select-none">
+                            —
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Gap between morning and afternoon */}
+                {isMorningEnd && (
+                  <div
+                    key="gap"
+                    className="grid grid-cols-6 border-t-2 border-b-2 border-slate-100 bg-slate-50"
+                  >
+                    <div className="py-1.5 px-3">
+                      <span className="text-xs text-slate-400">Lunch</span>
+                    </div>
+                    {days.map((_, di) => (
+                      <div
+                        key={di}
+                        className="border-l border-slate-100 py-1.5"
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
             );
           })}
         </div>
-
-        {/* Time rows */}
-        {ALL_SLOTS.map((time, idx) => {
-          const isMorningEnd = idx === MORNING_SLOTS.length - 1;
-          return (
-            <>
-              <div
-                key={time}
-                className={`grid grid-cols-6 ${isMorningEnd ? '' : 'border-b border-slate-50'}`}
-              >
-                <div className="py-3 px-3 flex items-center">
-                  <span className="text-xs text-slate-400 font-medium tabular-nums">
-                    {displayTime(time)}
-                  </span>
-                </div>
-                {days.map((d, di) => {
-                  const dateKey = toDateKey(d);
-                  const slot = slotMap[dateKey]?.[time];
-                  const isPast = d < today;
-                  return (
-                    <div
-                      key={di}
-                      className="py-2 px-1.5 border-l border-slate-100 flex items-center justify-center"
-                    >
-                      {slot && !isPast ? (
-                        <button
-                          onClick={() => handleBook(slot)}
-                          disabled={submitting !== null}
-                          className={`w-full py-1.5 px-1 rounded-lg text-xs font-semibold transition-colors leading-tight ${
-                            submitting === slot.id
-                              ? 'bg-indigo-200 text-indigo-500 cursor-wait'
-                              : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white'
-                          }`}
-                        >
-                          {submitting === slot.id ? (
-                            '…'
-                          ) : (
-                            <>
-                              <span className="block">Book</span>
-                              <span
-                                className="block font-normal text-indigo-400 truncate"
-                                style={{ fontSize: '0.6rem' }}
-                              >
-                                {slot.therapist_name ||
-                                  slot.therapist_email?.split('@')[0]}
-                              </span>
-                            </>
-                          )}
-                        </button>
-                      ) : (
-                        <span className="w-full py-1.5 rounded-lg text-xs text-center text-slate-200 select-none">
-                          —
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              {/* Gap between morning and afternoon */}
-              {isMorningEnd && (
-                <div
-                  key="gap"
-                  className="grid grid-cols-6 border-t-2 border-b-2 border-slate-100 bg-slate-50"
-                >
-                  <div className="py-1.5 px-3">
-                    <span className="text-xs text-slate-400">Lunch</span>
-                  </div>
-                  {days.map((_, di) => (
-                    <div
-                      key={di}
-                      className="border-l border-slate-100 py-1.5"
-                    />
-                  ))}
-                </div>
-              )}
-            </>
-          );
-        })}
       </div>
 
       <p className="text-xs text-slate-400 mt-3 text-center">
