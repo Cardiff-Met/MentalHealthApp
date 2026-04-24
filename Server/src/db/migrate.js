@@ -6,6 +6,7 @@
  * MySQL named volume already existed before a schema change was introduced
  * (Docker only re-runs init scripts on an empty volume).
  */
+const { setTimeout: sleep } = require('timers/promises');
 const db = require('./connection');
 
 async function columnExists(table, column) {
@@ -28,7 +29,7 @@ async function waitForDb(retries = 20, delayMs = 3000) {
       return; // connected
     } catch {
       console.log(`[migrate] Waiting for DB… (attempt ${i}/${retries})`);
-      await new Promise((r) => setTimeout(r, delayMs));
+      await sleep(delayMs);
     }
   }
   throw new Error('Database did not become ready in time');
