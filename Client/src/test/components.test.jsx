@@ -39,7 +39,9 @@ beforeEach(() => {
 describe('Button', () => {
   it('renders children', () => {
     render(<Button>Click me</Button>);
-    expect(screen.getByRole('button', { name: 'Click me' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Click me' })
+    ).toBeInTheDocument();
   });
 
   it('calls onClick when clicked', async () => {
@@ -56,7 +58,11 @@ describe('Button', () => {
 
   it('does not fire onClick when disabled', async () => {
     const handler = vi.fn();
-    render(<Button disabled onClick={handler}>Nope</Button>);
+    render(
+      <Button disabled onClick={handler}>
+        Nope
+      </Button>
+    );
     await userEvent.click(screen.getByRole('button'));
     expect(handler).not.toHaveBeenCalled();
   });
@@ -106,10 +112,10 @@ describe('EmptyState', () => {
   });
 
   it('renders action slot', () => {
-    render(
-      <EmptyState title="Empty" action={<button>Do something</button>} />
-    );
-    expect(screen.getByRole('button', { name: 'Do something' })).toBeInTheDocument();
+    render(<EmptyState title="Empty" action={<button>Do something</button>} />);
+    expect(
+      screen.getByRole('button', { name: 'Do something' })
+    ).toBeInTheDocument();
   });
 
   it('omits title/message when not provided', () => {
@@ -175,17 +181,25 @@ function renderLogin() {
 describe('LoginPage', () => {
   it('renders sign in form by default', () => {
     renderLogin();
-    expect(screen.getByRole('heading', { name: 'Welcome back' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Welcome back' })
+    ).toBeInTheDocument();
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /sign in/i })
+    ).toBeInTheDocument();
   });
 
   it('toggles to register mode', async () => {
     renderLogin();
     await userEvent.click(screen.getByRole('button', { name: /register/i }));
-    expect(screen.getByRole('heading', { name: 'Create your account' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Create your account' })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /create account/i })
+    ).toBeInTheDocument();
   });
 
   it('shows error when login fails', async () => {
@@ -195,12 +209,17 @@ describe('LoginPage', () => {
     });
 
     renderLogin();
-    await userEvent.type(screen.getByLabelText(/email address/i), 'test@test.com');
+    await userEvent.type(
+      screen.getByLabelText(/email address/i),
+      'test@test.com'
+    );
     await userEvent.type(screen.getByLabelText(/password/i), 'wrongpass');
     await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Invalid credentials');
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Invalid credentials'
+      );
     });
   });
 
@@ -211,7 +230,10 @@ describe('LoginPage', () => {
     });
 
     renderLogin();
-    await userEvent.type(screen.getByLabelText(/email address/i), 'user@test.com');
+    await userEvent.type(
+      screen.getByLabelText(/email address/i),
+      'user@test.com'
+    );
     await userEvent.type(screen.getByLabelText(/password/i), 'password123');
     await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
 
@@ -235,8 +257,12 @@ function renderMood() {
 describe('MoodPage', () => {
   it('renders mood selection form', () => {
     renderMood();
-    expect(screen.getByRole('heading', { name: /how are you feeling/i })).toBeInTheDocument();
-    expect(screen.getByRole('radiogroup', { name: /mood rating/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /how are you feeling/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('radiogroup', { name: /mood rating/i })
+    ).toBeInTheDocument();
     expect(screen.getAllByRole('radio')).toHaveLength(5);
   });
 
@@ -244,7 +270,9 @@ describe('MoodPage', () => {
     renderMood();
     await userEvent.click(screen.getByRole('button', { name: /submit mood/i }));
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent(/please select a mood/i);
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        /please select a mood/i
+      );
     });
   });
 
@@ -261,7 +289,12 @@ describe('MoodPage', () => {
       json: async () => ({
         isCrisis: false,
         resources: [
-          { id: 1, title: 'Mindfulness Guide', description: 'Helpful tips', url: 'https://example.com' },
+          {
+            id: 1,
+            title: 'Mindfulness Guide',
+            description: 'Helpful tips',
+            url: 'https://example.com',
+          },
         ],
       }),
     });
@@ -286,7 +319,9 @@ describe('MoodPage', () => {
     await userEvent.click(screen.getByRole('button', { name: /submit mood/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/immediate support available/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/immediate support available/i)
+      ).toBeInTheDocument();
     });
   });
 });
