@@ -263,16 +263,25 @@ Conducted before the final submission. Each item was reviewed by at least one te
 
 | Area | Check | Reviewer | Result |
 |------|-------|----------|--------|
-| Repository structure | `/client`, `/server`, `/docs` folders present and logical | Luca | ✅ Pass |
+| Repository structure | `/Client`, `/Server`, `/docs` folders present and logical | Luca | ✅ Pass |
 | README | Build, run, test instructions present and accurate | Noe | ✅ Pass |
 | Dockerfile | Builds successfully with `docker compose build` | Noe | ✅ Pass |
-| Tests | All 50 tests pass with `npm test` | Luca | ✅ Pass |
+| Production compose | `docker-compose.prod.yml` validates with `docker compose config` | Noe | ✅ Pass |
+| Server tests | 139 tests pass with `cd Server && npm test` | Luca | ✅ Pass |
+| Client tests | 29 Vitest tests pass with `cd Client && npm test` | Luca | ✅ Pass |
+| Integration test | Full register → cancel journey passes (`integration/user-journey.test.js`) | Luca | ✅ Pass |
+| Security tests | SQL-injection, XSS, JWT-tampering, privilege-escalation all rejected | Abdisamad | ✅ Pass |
 | Auth security | JWT middleware on all protected routes | Ahmed | ✅ Pass |
-| Role-based access | `requireAdmin` middleware on `/api/admin/*` | Ahmed | ✅ Pass |
+| Role-based access | `requireAdmin` and `requireTherapist` middleware on protected routes | Ahmed | ✅ Pass |
 | Input validation | Email, password, mood rating validated before DB | Abdisamad | ✅ Pass |
-| Password hashing | bcrypt used — no plain text passwords in DB | Abdisamad | ✅ Pass |
-| No committed secrets | `.env` in `.gitignore`, `.env.example` present | Luca | ✅ Pass |
-| SQL injection prevention | Parameterised queries used throughout | Ahmed | ✅ Pass |
+| Password hashing | bcrypt cost 10 — no plain text passwords in DB | Abdisamad | ✅ Pass |
+| No committed secrets | `.env`, `.env.prod` in `.gitignore`; `.env.example` and `.env.prod.example` present | Luca | ✅ Pass |
+| SQL injection prevention | Parameterised queries throughout (verified by `attacks.test.js`) | Ahmed | ✅ Pass |
+| Accessibility | WCAG 2.1 AA pass — skip link, ARIA roles, keyboard-only, mobile hamburger | Ahmed | ✅ Pass |
+| NFR specification | `docs/nfr.md` covers 9 categories with codebase evidence | Noe | ✅ Pass |
+| Threat model | `docs/threat-model.md` STRIDE matrix with 23 threats | Noe | ✅ Pass |
+| Deployment guide | `docs/deployment.md` reproducible from a fresh VPS | Noe | ✅ Pass |
+| Runbook | `docs/runbook.md` covers API/DB down, TLS, breach response | Noe | ✅ Pass |
 
 ### 5.2 Issues Found and Fixed
 
@@ -281,6 +290,11 @@ Conducted before the final submission. Each item was reviewed by at least one te
 | `index.js` combined app setup and `listen()` — blocked supertest from importing the app | Luca (Week 9) | Extracted `app.js` (setup) from `index.js` (listen) |
 | `JWT_SECRET` captured at module load time in `auth.js` — made test environment injection fragile | Luca (Week 9) | Changed to read `process.env.JWT_SECRET` at call time inside the function |
 | `Server→Database` arrow was one-directional in architecture diagram | Noe | Updated `docs/architecture.svg` to show bidirectional arrows |
+| Admin self-edit guard missing on role dropdown — admin could demote themselves | Ahmed (Day 12) | Disabled the dropdown for the current user; server-side check still rejects self-changes |
+| Stale JWT in browser cache showed wrong nav links after role change | Luca (Day 12) | Documented the "log out + back in" requirement; long-term fix would be a server-pushed token refresh on role change |
+| Day-13 a11y PR initially failed CI on Prettier formatting | Luca (Day 13) | Ran `npm run format`; added action item to introduce a pre-push hook in any future iteration |
+| `localStorage` access tokens are exfiltratable by XSS — flagged in STRIDE threat model | Luca (Day 15) | Documented as residual-medium risk C1; mitigation tracked in Sprint 3 retro carry-over list |
+| Multi-category resources stored as JSON column — required `parseCategories()` helper because mysql2 returns the value as a string in some driver versions | Abdisamad (Day 12) | Helper handles Array, JSON-string and plain-string inputs; covered by tests |
 
 ---
 
@@ -290,12 +304,24 @@ Conducted before the final submission. Each item was reviewed by at least one te
 |-------------|----------|
 | Architecture diagram | `docs/architecture.svg` |
 | Docker server image | `Server/Dockerfile` |
-| Docker Compose config | `docker-compose.yml` |
+| Docker Compose (development) | `docker-compose.yml` |
+| Docker Compose (production) | `docker-compose.prod.yml` |
 | GitHub Actions — code quality | `.github/workflows/code-quality.yml` |
 | GitHub Actions — Docker build + health check | `.github/workflows/docker-test.yml` |
-| Environment variable template | `Server/.env.example` |
+| Environment variable template (dev) | `Server/.env.example` |
+| Environment variable template (prod) | `.env.prod.example` |
 | Scrum planning + branching policy | `docs/week06.md` |
-| Sprint 1 PR evidence | `docs/week06.md` Section 6 |
+| Sprint 1 PR evidence | `docs/week06.md` §6 |
+| Sprint 2 plan + retro | `docs/sprint02.md` |
+| Sprint 3 plan + retro | `docs/sprint03.md` |
+| Non-functional requirements | `docs/nfr.md` |
+| STRIDE threat model | `docs/threat-model.md` |
+| Deployment guide | `docs/deployment.md` |
+| Operational runbook | `docs/runbook.md` |
+| Server test suite (139 tests) | `Server/src/__tests__/` |
+| Client test suite (29 tests) | `Client/src/test/components.test.jsx` |
+| Integration journey test | `Server/src/__tests__/integration/user-journey.test.js` |
+| Attack-vector security tests | `Server/src/__tests__/security/attacks.test.js` |
 
 ---
 
@@ -303,8 +329,10 @@ Conducted before the final submission. Each item was reviewed by at least one te
 
 | Limitation | Detail |
 |------------|--------|
-| HTTPS not configured | The server runs over HTTP. For a real deployment, a reverse proxy (e.g. Nginx + Let's Encrypt) should be added. The refresh token cookie has `secure: false` — this must be set to `true` for HTTPS. |
-| Admin panel not in client | The `GET /api/admin/users` endpoint exists and is protected, but no admin UI page has been built. |
-| No email notifications | Booking status changes (Pending → Confirmed/Declined) are only visible when the student navigates to the booking page. No push or email notification is sent. |
-| Single-node deployment | No load balancing or horizontal scaling is configured. Suitable for a small university cohort but not for production scale. |
-| Therapy slot data is seeded | Available therapy slots are pre-seeded in the database. A real deployment would require an admin interface for counsellors to manage availability. |
+| HTTPS configured for production only | The development compose runs over HTTP. The production compose + deployment guide (`docs/deployment.md`) configures Nginx + Let's Encrypt and sets `secure: true` on the refresh token cookie. |
+| No email notifications | Booking status changes (Pending → Confirmed/Declined) are only visible when the student navigates to the booking page. No push or email notification is sent. Future work would integrate SendGrid / SES. |
+| Single-node deployment | No load balancing or horizontal scaling is configured. The application is stateless (JWT) so horizontal scaling would only require a load balancer in front of multiple API replicas — see NFR §3 (SCALE-1, SCALE-3). |
+| Access tokens stored in `localStorage` | Documented as residual-medium risk **C1** in `docs/threat-model.md`. Closing this risk requires a refactor to in-memory tokens + server-side rotation; tracked in Sprint 3 retro carry-over list. |
+| bcrypt cost factor 10 | Acceptable today (~80 ms per hash on a 2024 server). STRIDE follow-up item AU4 to bump to 12 once login-latency budget allows. |
+| Encrypted off-site DB backups not automated | The runbook documents nightly local backups and the deployment guide notes off-site copy via `rsync`/`aws s3 sync` as a manual step; full automation is in the Sprint 3 carry-over backlog. |
+| No live cloud deployment for the demo | Per the assessment brief and Workshop Week 10 (*"production environment ... a cloud VM, a university server, **or a local production-like machine**"*), a live URL is not required. The system is verified to run end-to-end via `docker compose up` on any host with Docker installed. |
