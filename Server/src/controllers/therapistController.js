@@ -182,9 +182,7 @@ async function updateBooking(req, res) {
     const booking = rows[0];
 
     if (booking.therapist_id !== req.user.userId) {
-      return res
-        .status(403)
-        .json({ error: 'You can only manage bookings on your own slots.' });
+      return res.status(403).json({ error: 'You can only manage bookings on your own slots.' });
     }
 
     if (booking.status === 'confirmed' || booking.status === 'declined') {

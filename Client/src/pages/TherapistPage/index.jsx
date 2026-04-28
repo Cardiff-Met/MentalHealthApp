@@ -183,7 +183,8 @@ export default function TherapistPage() {
       {bookings.filter((b) => b.status === 'pending').length > 0 && (
         <section className="mb-8">
           <h2 className="text-lg font-semibold text-slate-800 mb-3">
-            Booking requests ({bookings.filter((b) => b.status === 'pending').length})
+            Booking requests (
+            {bookings.filter((b) => b.status === 'pending').length})
           </h2>
           <div className="space-y-3">
             {bookings
@@ -374,7 +375,11 @@ export default function TherapistPage() {
                           {isBusy
                             ? '…'
                             : isOther
-                              ? (slot.therapist_name || slot.therapist_email || '')
+                              ? (
+                                  slot.therapist_name ||
+                                  slot.therapist_email ||
+                                  ''
+                                )
                                   .charAt(0)
                                   .toUpperCase() || '•'
                               : isBooked
