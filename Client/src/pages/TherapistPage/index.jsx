@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { useAuth } from '@/context';
 import ErrorBanner from '@/components/ErrorBanner';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -43,29 +43,66 @@ function displayTime(hhmm) {
 export default function TherapistPage() {
   const { authFetch } = useAuth();
   const [slots, setSlots] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(null); // "dateKey|HH:MM" being toggled
+  const [updatingBookingId, setUpdatingBookingId] = useState(null);
   const [weekOffset, setWeekOffset] = useState(0);
 
   useEffect(() => {
-    async function fetchSlots() {
+    async function fetchData() {
       try {
-        const res = await authFetch('/api/therapist/slots');
-        const data = await res.json();
-        if (!res.ok) {
-          setError(data.error);
+        const [slotsRes, bookingsRes] = await Promise.all([
+          authFetch('/api/therapist/slots'),
+          authFetch('/api/therapist/bookings'),
+        ]);
+        const slotsData = await slotsRes.json();
+        const bookingsData = await bookingsRes.json();
+        if (!slotsRes.ok) {
+          setError(slotsData.error);
           return;
         }
-        setSlots(data.slots ?? []);
+        setSlots(slotsData.slots ?? []);
+        setBookings(bookingsRes.ok ? (bookingsData.bookings ?? []) : []);
       } catch {
-        setError('Could not load your slots.');
+        setError('Could not load your data.');
       } finally {
         setLoading(false);
       }
     }
-    fetchSlots();
+    fetchData();
   }, [authFetch]);
+
+  async function updateBookingStatus(bookingId, status) {
+    setUpdatingBookingId(bookingId);
+    setError('');
+    try {
+      const res = await authFetch(`/api/therapist/bookings/${bookingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        setBookings((prev) =>
+          prev.map((b) => (b.id === bookingId ? { ...b, status } : b))
+        );
+        // If declined, the slot becomes available again — refetch slots
+        if (status === 'declined') {
+          const slotsRes = await authFetch('/api/therapist/slots');
+          const slotsData = await slotsRes.json();
+          if (slotsRes.ok) setSlots(slotsData.slots ?? []);
+        }
+      } else {
+        const data = await res.json();
+        setError(data.error);
+      }
+    } catch {
+      setError('Could not update booking. Please try again.');
+    } finally {
+      setUpdatingBookingId(null);
+    }
+  }
 
   async function toggleSlot(date, time, existingSlot) {
     const key = `${toDateKey(date)}|${time}`;
@@ -142,15 +179,75 @@ export default function TherapistPage() {
 
       <ErrorBanner message={error} className="mb-6" />
 
+      {/* Pending booking requests */}
+      {bookings.filter((b) => b.status === 'pending').length > 0 && (
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold text-slate-800 mb-3">
+            Booking requests ({bookings.filter((b) => b.status === 'pending').length})
+          </h2>
+          <div className="space-y-3">
+            {bookings
+              .filter((b) => b.status === 'pending')
+              .map((b) => {
+                const timeKey = String(b.slot_time).slice(0, 5);
+                const isUpdating = updatingBookingId === b.id;
+                return (
+                  <div
+                    key={b.id}
+                    className="bg-white border border-slate-200 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3"
+                  >
+                    <div>
+                      <p className="font-semibold text-slate-800">
+                        {new Date(b.slot_date).toLocaleDateString('en-GB', {
+                          weekday: 'short',
+                          day: 'numeric',
+                          month: 'short',
+                        })}{' '}
+                        · {displayTime(timeKey)}
+                      </p>
+                      <p className="text-sm text-slate-500 mt-0.5">
+                        Requested by{' '}
+                        <span className="font-medium">
+                          {b.user_name || b.user_email}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        disabled={isUpdating}
+                        onClick={() => updateBookingStatus(b.id, 'confirmed')}
+                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white transition-colors"
+                      >
+                        {isUpdating ? '…' : 'Confirm'}
+                      </button>
+                      <button
+                        disabled={isUpdating}
+                        onClick={() => updateBookingStatus(b.id, 'declined')}
+                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-white border border-slate-300 text-slate-700 hover:border-red-300 hover:text-red-600 disabled:opacity-50 transition-colors"
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </section>
+      )}
+
       {/* Legend */}
-      <div className="flex items-center gap-5 mb-4 text-xs text-slate-500">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-4 text-xs text-slate-500">
         <span className="flex items-center gap-1.5">
           <span className="inline-block w-4 h-4 rounded bg-teal-100 border border-teal-300" />
-          Available (click to remove)
+          Yours — available (click to remove)
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block w-4 h-4 rounded bg-amber-100 border border-amber-300" />
-          Booked — cannot remove
+          Yours — booked
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-4 h-4 rounded bg-violet-100 border border-violet-300" />
+          Covered by another therapist
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block w-4 h-4 rounded bg-slate-100 border border-slate-200" />
@@ -212,9 +309,8 @@ export default function TherapistPage() {
           {ALL_SLOTS.map((time, idx) => {
             const isMorningEnd = idx === MORNING_SLOTS.length - 1;
             return (
-              <>
+              <Fragment key={time}>
                 <div
-                  key={time}
                   className={`grid grid-cols-6 ${isMorningEnd ? '' : 'border-b border-slate-50'}`}
                 >
                   <div className="py-3 px-3 flex items-center">
@@ -224,11 +320,15 @@ export default function TherapistPage() {
                   </div>
                   {days.map((d, di) => {
                     const dateKey = toDateKey(d);
-                    const isPast = d < today;
+                    const isToday = dateKey === toDateKey(today);
+                    const nowHHMM = new Date().toTimeString().slice(0, 5);
+                    const isPast = d < today || (isToday && time <= nowHHMM);
                     const slot = slotMap[dateKey]?.[time];
                     const busyKey = `${dateKey}|${time}`;
                     const isBusy = busy === busyKey;
-                    const isBooked = slot && slot.status !== 'available';
+                    const isMine = slot?.is_mine;
+                    const isOther = slot && !isMine;
+                    const isBooked = isMine && slot.status !== 'available';
 
                     let cellClass =
                       'w-full py-1.5 rounded-lg text-xs font-semibold transition-colors ';
@@ -236,6 +336,9 @@ export default function TherapistPage() {
                       cellClass += 'bg-slate-100 text-slate-400 cursor-wait';
                     } else if (isPast) {
                       cellClass += 'text-slate-200 cursor-default';
+                    } else if (isOther) {
+                      cellClass +=
+                        'bg-violet-50 text-violet-600 border border-violet-200 cursor-not-allowed';
                     } else if (isBooked) {
                       cellClass +=
                         'bg-amber-50 text-amber-600 border border-amber-200 cursor-not-allowed';
@@ -253,36 +356,39 @@ export default function TherapistPage() {
                         className="py-2 px-1.5 border-l border-slate-100 flex items-center justify-center"
                       >
                         <button
-                          disabled={isPast || isBooked || isBusy}
+                          disabled={isPast || isOther || isBooked || isBusy}
                           onClick={() => toggleSlot(d, time, slot ?? null)}
                           className={cellClass}
                           title={
-                            isBooked
-                              ? 'Already booked — cannot remove'
-                              : slot
-                                ? 'Click to remove this slot'
-                                : isPast
-                                  ? 'Past date'
-                                  : 'Click to add this slot'
+                            isOther
+                              ? `Covered by ${slot.therapist_name || slot.therapist_email}`
+                              : isBooked
+                                ? 'Already booked — cannot remove'
+                                : slot
+                                  ? 'Click to remove this slot'
+                                  : isPast
+                                    ? 'Past date'
+                                    : 'Click to add this slot'
                           }
                         >
                           {isBusy
                             ? '…'
-                            : isBooked
-                              ? 'Booked'
-                              : slot
-                                ? '✓'
-                                : '+'}
+                            : isOther
+                              ? (slot.therapist_name || slot.therapist_email || '')
+                                  .charAt(0)
+                                  .toUpperCase() || '•'
+                              : isBooked
+                                ? 'Booked'
+                                : slot
+                                  ? '✓'
+                                  : '+'}
                         </button>
                       </div>
                     );
                   })}
                 </div>
                 {isMorningEnd && (
-                  <div
-                    key="gap"
-                    className="grid grid-cols-6 border-t-2 border-b-2 border-slate-100 bg-slate-50"
-                  >
+                  <div className="grid grid-cols-6 border-t-2 border-b-2 border-slate-100 bg-slate-50">
                     <div className="py-1.5 px-3">
                       <span className="text-xs text-slate-400">Lunch</span>
                     </div>
@@ -294,7 +400,7 @@ export default function TherapistPage() {
                     ))}
                   </div>
                 )}
-              </>
+              </Fragment>
             );
           })}
         </div>

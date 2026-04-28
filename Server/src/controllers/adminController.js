@@ -194,9 +194,11 @@ async function updateBooking(req, res) {
       ]);
     }
 
-    // If confirmed, mark the slot as booked
+    // If confirmed, mark the slot as confirmed (matches therapy_slots.status ENUM)
     if (status === 'confirmed') {
-      await db.query('UPDATE therapy_slots SET status = "booked" WHERE id = ?', [booking.slot_id]);
+      await db.query('UPDATE therapy_slots SET status = "confirmed" WHERE id = ?', [
+        booking.slot_id,
+      ]);
     }
 
     res.json({ message: `Booking ${status}.` });
