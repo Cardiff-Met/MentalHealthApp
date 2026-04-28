@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context';
 import Card from '@/components/Card';
@@ -195,9 +195,8 @@ function BookingTab({ authFetch, onBooked }) {
           {ALL_SLOTS.map((time, idx) => {
             const isMorningEnd = idx === MORNING_SLOTS.length - 1;
             return (
-              <>
+              <Fragment key={time}>
                 <div
-                  key={time}
                   className={`grid grid-cols-6 ${isMorningEnd ? '' : 'border-b border-slate-50'}`}
                 >
                   <div className="py-3 px-3 flex items-center">
@@ -250,10 +249,7 @@ function BookingTab({ authFetch, onBooked }) {
                 </div>
                 {/* Gap between morning and afternoon */}
                 {isMorningEnd && (
-                  <div
-                    key="gap"
-                    className="grid grid-cols-6 border-t-2 border-b-2 border-slate-100 bg-slate-50"
-                  >
+                  <div className="grid grid-cols-6 border-t-2 border-b-2 border-slate-100 bg-slate-50">
                     <div className="py-1.5 px-3">
                       <span className="text-xs text-slate-400">Lunch</span>
                     </div>
@@ -265,7 +261,7 @@ function BookingTab({ authFetch, onBooked }) {
                     ))}
                   </div>
                 )}
-              </>
+              </Fragment>
             );
           })}
         </div>

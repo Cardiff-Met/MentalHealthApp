@@ -2,7 +2,13 @@ const express = require('express');
 const router = express.Router();
 const authenticateToken = require('../middleware/auth');
 const requireTherapist = require('../middleware/requireTherapist');
-const { getMySlots, addSlot, removeSlot } = require('../controllers/therapistController');
+const {
+  getMySlots,
+  addSlot,
+  removeSlot,
+  getMyBookings,
+  updateBooking,
+} = require('../controllers/therapistController');
 
 router.use(authenticateToken, requireTherapist);
 
@@ -78,5 +84,27 @@ router.post('/slots', addSlot);
  *         description: Slot already booked — cannot remove
  */
 router.delete('/slots/:id', removeSlot);
+
+/**
+ * @swagger
+ * /api/therapist/bookings:
+ *   get:
+ *     summary: List bookings made on the authenticated therapist's slots
+ *     tags: [Therapist]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get('/bookings', getMyBookings);
+
+/**
+ * @swagger
+ * /api/therapist/bookings/{id}:
+ *   patch:
+ *     summary: Confirm or decline a booking on one of the therapist's own slots
+ *     tags: [Therapist]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.patch('/bookings/:id', updateBooking);
 
 module.exports = router;
