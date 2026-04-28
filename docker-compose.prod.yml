@@ -1,0 +1,78 @@
+# ============================================================================
+# Production Docker Compose for MindSpace
+# ============================================================================
+# Usage:
+#   1. Copy .env.prod.example → .env.prod and fill in real secrets
+#   2. docker compose -f docker-compose.prod.yml up -d
+#
+# Differences from development docker-compose.yml:
+#   - All credentials sourced from environment (never literals)
+#   - DB port NOT published — only the API can reach it via the internal network
+#   - Server binds to 127.0.0.1 only — Nginx reverse proxy fronts it externally
+#   - Restart policies on every service
+#   - Healthchecks on every service
+#   - Read-only volume mounts for schema seed
+# ============================================================================
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: mindspace-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    # Port intentionally NOT published — DB is only reachable from the
+    # internal Docker network. Connect via `docker exec` for admin tasks.
+    expose:
+      - "3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./Server/src/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - mindspace-net
+
+  server:
+    build: ./Server
+    container_name: mindspace-api
+    restart: unless-stopped
+    # Bind only to the loopback interface — Nginx is the public-facing edge.
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      CLIENT_URL: ${CLIENT_URL}
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      REFRESH_SECRET: ${REFRESH_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - mindspace-net
+
+volumes:
+  db_data:
+
+networks:
+  mindspace-net:
+    driver: bridge
