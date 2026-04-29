@@ -4,7 +4,7 @@ const db = require('../db/connection');
 const { isValidEmail, isValidPassword } = require('../utils/validation');
 const { audit } = require('../utils/audit');
 
-const SALT_ROUNDS = 10;
+const SALT_ROUNDS = 12;
 
 // Read secrets at call-time so test environments can override via process.env
 function generateAccessToken(payload) {
