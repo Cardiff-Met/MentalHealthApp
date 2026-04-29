@@ -49,9 +49,19 @@ describe('GET /api/therapist/slots', () => {
   });
 
   test('returns 200 and slots array for a therapist', async () => {
-    db.query.mockResolvedValueOnce([[
-      { id: 1, slot_date: '2026-05-10', slot_time: '09:00:00', time_of_day: 'morning', status: 'available', therapist_id: 10, is_mine: 1 },
-    ]]);
+    db.query.mockResolvedValueOnce([
+      [
+        {
+          id: 1,
+          slot_date: '2026-05-10',
+          slot_time: '09:00:00',
+          time_of_day: 'morning',
+          status: 'available',
+          therapist_id: 10,
+          is_mine: 1,
+        },
+      ],
+    ]);
 
     const res = await request(app)
       .get('/api/therapist/slots')
@@ -105,9 +115,16 @@ describe('POST /api/therapist/slots', () => {
   });
 
   test('returns 409 when the slot is already taken by another therapist', async () => {
-    db.query.mockResolvedValueOnce([[
-      { id: 5, therapist_id: 99, therapist_name: 'Dr Smith', therapist_email: 'smith@cardiffmet.ac.uk' },
-    ]]);
+    db.query.mockResolvedValueOnce([
+      [
+        {
+          id: 5,
+          therapist_id: 99,
+          therapist_name: 'Dr Smith',
+          therapist_email: 'smith@cardiffmet.ac.uk',
+        },
+      ],
+    ]);
 
     const res = await request(app)
       .post('/api/therapist/slots')
@@ -119,9 +136,16 @@ describe('POST /api/therapist/slots', () => {
   });
 
   test('returns 409 when the therapist already owns that slot', async () => {
-    db.query.mockResolvedValueOnce([[
-      { id: 3, therapist_id: 10, therapist_name: null, therapist_email: 'therapist@cardiffmet.ac.uk' },
-    ]]);
+    db.query.mockResolvedValueOnce([
+      [
+        {
+          id: 3,
+          therapist_id: 10,
+          therapist_name: null,
+          therapist_email: 'therapist@cardiffmet.ac.uk',
+        },
+      ],
+    ]);
 
     const res = await request(app)
       .post('/api/therapist/slots')
@@ -149,7 +173,7 @@ describe('POST /api/therapist/slots', () => {
 describe('DELETE /api/therapist/slots/:id', () => {
   test('removes an available slot successfully', async () => {
     db.query.mockResolvedValueOnce([[{ id: 1, status: 'available' }]]); // SELECT
-    db.query.mockResolvedValueOnce([{ affectedRows: 1 }]);               // DELETE
+    db.query.mockResolvedValueOnce([{ affectedRows: 1 }]); // DELETE
 
     const res = await request(app)
       .delete('/api/therapist/slots/1')
@@ -187,9 +211,17 @@ describe('DELETE /api/therapist/slots/:id', () => {
 
 describe('GET /api/therapist/bookings', () => {
   test('returns 200 and bookings for a therapist', async () => {
-    db.query.mockResolvedValueOnce([[
-      { id: 1, status: 'pending', user_email: 'user@test.com', slot_date: '2027-06-01', slot_time: '09:00:00' },
-    ]]);
+    db.query.mockResolvedValueOnce([
+      [
+        {
+          id: 1,
+          status: 'pending',
+          user_email: 'user@test.com',
+          slot_date: '2027-06-01',
+          slot_time: '09:00:00',
+        },
+      ],
+    ]);
 
     const res = await request(app)
       .get('/api/therapist/bookings')

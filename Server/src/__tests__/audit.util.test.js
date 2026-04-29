@@ -34,7 +34,7 @@ describe('audit utility', () => {
     expect(db.query).toHaveBeenCalledTimes(1);
     const [sql, params] = db.query.mock.calls[0];
     expect(sql).toMatch(/INSERT INTO audit_log/);
-    expect(params[0]).toBe(1);           // user_id
+    expect(params[0]).toBe(1); // user_id
     expect(params[1]).toBe('login_success'); // action
     expect(params[2]).toBe('127.0.0.1'); // ip
   });
