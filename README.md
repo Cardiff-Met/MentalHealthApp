@@ -191,19 +191,19 @@ npm test
 | Suite | Tests | Type | What it covers |
 |-------|-------|------|----------------|
 | `validation.test.js` | 21 | Unit | Email, password, mood rating validators |
-| `auth.middleware.test.js` | 8 | Unit | JWT authentication middleware |
+| `auth.middleware.test.js` | 7 | Unit | JWT authentication middleware |
 | `requireAdmin.middleware.test.js` | 5 | Unit | Admin role guard |
 | `requireTherapist.middleware.test.js` | 6 | Unit | Therapist role guard |
 | `audit.util.test.js` | 6 | Unit | Audit log writer |
 | `mood.feature.test.js` | 17 | Functional | Register → Login → Log Mood → Resources |
-| `user.feature.test.js` | — | Functional | Profile, GDPR export, change password, delete account |
-| `passwordReset.feature.test.js` | — | Functional | Forgot password → reset flow |
-| `savedResources.feature.test.js` | — | Functional | Save/unsave resources |
-| `admin.feature.test.js` | — | Functional | User management, resource CRUD, booking confirm/decline |
-| `therapist.feature.test.js` | 12 | Functional | Add/remove slots, conflict detection, bookings |
-| `security.test.js` | — | Security | XSS and SQL injection prevention |
-| `security/attacks.test.js` | — | Security | JWT tampering, role escalation, mass-assignment |
-| `integration/user-journey.test.js` | — | Integration | End-to-end user journey |
+| `user.feature.test.js` | 14 | Functional | Profile, GDPR export, change password, delete account |
+| `passwordReset.feature.test.js` | 9 | Functional | Forgot password → reset flow |
+| `savedResources.feature.test.js` | 14 | Functional | Save/unsave resources |
+| `admin.feature.test.js` | 22 | Functional | User management, resource CRUD, booking confirm/decline |
+| `therapist.feature.test.js` | 13 | Functional | Add/remove slots, conflict detection, bookings |
+| `security.test.js` | 14 | Security | XSS and SQL injection prevention |
+| `security/attacks.test.js` | 9 | Security | JWT tampering, role escalation, mass-assignment |
+| `integration/user-journey.test.js` | 7 | Integration | End-to-end user journey |
 | **Total** | **164** | | |
 
 All functional and integration tests use **supertest** to send real HTTP requests through the full Express stack. Database and bcrypt are mocked — no live MySQL needed.
