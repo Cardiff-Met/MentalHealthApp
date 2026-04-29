@@ -1,6 +1,6 @@
-# 🧠 Mental Health Support App
+# 🧠 MindSpace — Mental Health Support App
 
-A full-stack web application providing personalized mental health support for Cardiff Met students, built as part of SEN5002 Agile Development and DevOps.
+A full-stack web application providing personalised mental health support for Cardiff Met students, built as part of SEN5002 Agile Development and DevOps.
 
 [![Code Quality Checks](https://github.com/Cardiff-Met/MentalHealthApp/actions/workflows/code-quality.yml/badge.svg)](https://github.com/Cardiff-Met/MentalHealthApp/actions)
 [![Docker Build & Test](https://github.com/Cardiff-Met/MentalHealthApp/actions/workflows/docker-test.yml/badge.svg)](https://github.com/Cardiff-Met/MentalHealthApp/actions)
@@ -9,36 +9,63 @@ A full-stack web application providing personalized mental health support for Ca
 
 ## 🌟 Features
 
-- **Mood Tracking** - Log daily mood (1-5 scale) with optional notes
-- **Crisis Detection** - Automatic crisis support resources when mood is critically low
-- **Therapy Booking** - Request appointments with available time slots
-- **Resource Library** - Curated mental health resources with filtering
-- **Secure Authentication** - JWT-based auth with refresh tokens
-- **Responsive Design** - Works on desktop and mobile
+### Core
+- **Mood Tracking** — Log daily mood (1–5 scale) with optional notes
+- **Mood History** — 30-day trend chart (Recharts line graph)
+- **Crisis Detection** — Automatic crisis resources when mood = 1
+- **Resource Library** — Curated mental health resources with category filtering and save-for-later
+- **Therapy Booking** — Browse slots, book appointments, view booking status
+
+### User Account
+- **Profile Management** — Update name, email, change password
+- **GDPR Data Export** — Download all personal data as JSON
+- **Account Deletion** — Soft-delete with mood log anonymisation (GDPR Right to Erasure)
+- **Password Reset** — Secure token-based reset flow (SHA-256 hashed, 30-min expiry, single-use)
+
+### Role-Based Access
+- **Admin Dashboard** — Manage users (assign roles), manage resources, confirm/decline bookings
+- **Therapist Calendar** — Add/remove availability slots with conflict detection and past-date guards
+
+### Security & Compliance
+- **Helmet** — HTTP security headers on every response
+- **Rate Limiting** — 5 req/15 min on auth routes, 100 req/15 min general
+- **Audit Log** — Append-only log of login, logout, password changes, account deletion, admin actions
+- **STRIDE Threat Model** — 23 threats analysed; see [`docs/threat-model.md`](./docs/threat-model.md)
+- **Accessibility** — ARIA landmarks, skip link, focus rings, mobile nav (WCAG 2.1 AA)
 
 ---
 
 ## 🛠️ Tech Stack
 
 ### Frontend (Client)
-- **React 19** - UI library
-- **Vite** - Build tool and dev server
-- **React Router** - Client-side routing
-- **Tailwind CSS** - Styling
-- **ESLint + Prettier** - Code quality
+| Technology | Purpose |
+|-----------|---------|
+| React 19 | UI library |
+| Vite | Build tool & dev server |
+| React Router v7 | Client-side routing |
+| Tailwind CSS v4 | Styling |
+| Recharts | Mood history chart |
+| Vitest + Testing Library | Component & page tests |
+| ESLint + Prettier | Code quality |
 
 ### Backend (Server)
-- **Node.js 20** + **Express.js** - REST API
-- **MySQL 8** - Database
-- **JWT** - Authentication
-- **bcrypt** - Password hashing
-- **Swagger** - API documentation
-- **ESLint + Prettier** - Code quality
+| Technology | Purpose |
+|-----------|---------|
+| Node.js 20 + Express 5 | REST API |
+| MySQL 8 | Relational database |
+| JWT (jsonwebtoken) | Access + refresh token auth |
+| bcrypt | Password hashing |
+| Helmet | Security headers |
+| express-rate-limit | Rate limiting |
+| Swagger / OpenAPI | Interactive API docs |
+| Jest + Supertest | API & integration tests |
+| ESLint + Prettier | Code quality |
 
 ### DevOps
-- **Docker** + **Docker Compose** - Containerization
-- **GitHub Actions** - CI/CD pipeline
-- **Automated Testing** - Lint, format, and Docker checks
+| Technology | Purpose |
+|-----------|---------|
+| Docker + Docker Compose | Containerisation (dev & prod) |
+| GitHub Actions | CI/CD — lint, format, test, Docker smoke test |
 
 ---
 
@@ -46,7 +73,7 @@ A full-stack web application providing personalized mental health support for Ca
 
 ### Prerequisites
 - [Docker Desktop](https://www.docker.com/products/docker-desktop) installed
-- [Node.js 18+](https://nodejs.org/) (optional, for local development)
+- [Node.js 20+](https://nodejs.org/) (optional — only needed for local dev without Docker)
 
 ### 1. Clone the Repository
 ```bash
@@ -56,9 +83,8 @@ cd MentalHealthApp
 
 ### 2. Set Up Environment Variables
 ```bash
-# Create .env file in root
-echo "JWT_SECRET=your-super-secret-jwt-key-here" >> .env
-echo "REFRESH_SECRET=your-refresh-secret-key-here" >> .env
+cp Server/.env.example Server/.env
+# Edit Server/.env and set JWT_SECRET and REFRESH_SECRET (min 32 chars each)
 ```
 
 ### 3. Start with Docker Compose
@@ -67,8 +93,8 @@ docker compose up --build
 ```
 
 This starts:
-- **MySQL Database** on port 3306
-- **Express Server** on port 3000
+- **MySQL Database** on port 3306 (schema + seed data applied automatically)
+- **Express API Server** on port 3000
 
 ### 4. Start the Client (separate terminal)
 ```bash
@@ -77,7 +103,14 @@ npm install
 npm run dev
 ```
 
-The app will be available at: **http://localhost:5173**
+The app is available at: **http://localhost:5173**  
+Swagger API docs: **http://localhost:3000/api-docs**
+
+### Default Admin Account
+```
+Email:    admin@cardiffmet.ac.uk
+Password: Admin1234!
+```
 
 ---
 
@@ -85,133 +118,51 @@ The app will be available at: **http://localhost:5173**
 
 ```
 MentalHealthApp/
-├── .github/
-│   └── workflows/              # GitHub Actions CI/CD
-│       ├── code-quality.yml    # ESLint + Prettier checks
-│       └── docker-test.yml     # Docker build verification
+├── .github/workflows/
+│   ├── code-quality.yml        # ESLint + Prettier + Server tests + coverage
+│   └── docker-test.yml         # Docker build & smoke test
 │
-├── Client/                     # React frontend
+├── Client/                     # React 19 + Vite frontend
 │   ├── src/
-│   │   ├── pages/              # Page components (organized in folders)
-│   │   ├── context/            # React Context (Auth)
-│   │   └── App.jsx             # Main app component
-│   ├── eslint.config.js        # ESLint configuration
-│   ├── .prettierrc             # Prettier configuration
-│   └── vite.config.js          # Vite build config
+│   │   ├── components/         # AppShell, Button, Card, EmptyState, ErrorBanner, LoadingSpinner
+│   │   ├── pages/              # 9 pages: Login, Dashboard, Mood, MoodHistory, Resources,
+│   │   │                       #          Booking, Profile, Therapist, Admin
+│   │   ├── context/            # AuthContext, useAuth hook
+│   │   └── App.jsx
+│   └── test/                   # Vitest + Testing Library tests
 │
-├── Server/                     # Express.js backend
+├── Server/                     # Express 5 REST API
 │   ├── src/
-│   │   ├── controllers/        # Request handlers
-│   │   ├── routes/             # API route definitions
-│   │   ├── middleware/         # Auth middleware
-│   │   └── db/                 # Database connection & schema
-│   ├── Dockerfile              # Server container config
-│   ├── eslint.config.js        # ESLint configuration
-│   └── .prettierrc             # Prettier configuration
+│   │   ├── controllers/        # auth, mood, resources, booking, user,
+│   │   │                       # passwordReset, therapist, admin
+│   │   ├── routes/             # 7 route files
+│   │   ├── middleware/         # authenticateToken, requireAdmin, requireTherapist
+│   │   ├── db/                 # connection.js, schema.sql, migrate.js (11 migrations)
+│   │   ├── utils/              # validation.js, audit.js
+│   │   └── __tests__/          # 14 test suites — 164 tests
+│   └── Dockerfile              # Multi-stage alpine, npm ci, non-root user, HEALTHCHECK
 │
-├── docs/                       # Documentation
-│   ├── Server.md               # Server API docs
-│   └── Client.md               # Client setup docs
+├── docs/
+│   ├── nfr.md                  # Non-functional requirements (9 categories)
+│   ├── threat-model.md         # STRIDE threat analysis (23 threats)
+│   ├── deployment.md           # VPS deployment guide (Nginx + Let's Encrypt)
+│   ├── runbook.md              # 5 incident scenarios with diagnose/recover steps
+│   ├── GithubActions.md        # CI/CD pipeline documentation
+│   ├── sprint02.md             # Sprint 2 goals, stand-ups, PRs, retro
+│   ├── sprint03.md             # Sprint 3 goals, stand-ups, PRs, retro
+│   ├── baseline-metrics.md     # Performance baselines
+│   └── Server.md / Client.md  # API & frontend docs
 │
-├── docker-compose.yml          # Multi-container orchestration
-├── GITHUB_ACTIONS.md           # CI/CD documentation
-└── README.md                   # This file
-```
-
----
-
-## 🔧 Development
-
-### Running Locally (without Docker)
-
-#### Server
-```bash
-cd Server
-npm install
-
-# Create .env file with database credentials
-# See Server/.env.example
-
-npm run dev  # Starts on port 3000
-```
-
-#### Client
-```bash
-cd Client
-npm install
-npm run dev  # Starts on port 5173
-```
-
-### Code Quality Checks
-
-Both Client and Server have lint and format scripts:
-
-```bash
-# Check for errors
-npm run lint
-npm run format:check
-
-# Auto-fix errors
-npm run lint:fix
-npm run format
-```
-
----
-
-## 🔐 Environment Variables
-
-Create a `.env` file in the **root directory**:
-
-```env
-JWT_SECRET=your-super-secret-jwt-key-minimum-32-characters
-REFRESH_SECRET=your-refresh-secret-key-minimum-32-characters
-```
-
-The docker-compose.yml passes these to the server container.
-
----
-
-## 📚 API Documentation
-
-When the server is running, visit:
-
-**http://localhost:3000/api-docs**
-
-Interactive Swagger documentation with all endpoints, request/response examples, and authentication details.
-
-See also: [Server Documentation](./docs/Server.md)
-
----
-
-## 🐳 Docker
-
-### Build and Run
-```bash
-docker compose up --build
-```
-
-### Stop Containers
-```bash
-docker compose down
-```
-
-### Stop and Remove Volumes (fresh start)
-```bash
-docker compose down -v
-```
-
-### View Logs
-```bash
-docker compose logs server
-docker compose logs db
+├── docker-compose.yml          # Dev orchestration
+├── docker-compose.prod.yml     # Production orchestration
+└── .env.prod.example           # Production env template
 ```
 
 ---
 
 ## 🧪 Testing
 
-### Run the unit and functional test suite
-
+### Run the full server test suite
 ```bash
 cd Server
 npm test
@@ -219,179 +170,208 @@ npm test
 
 Expected output:
 ```
-Test Suites: 4 passed, 4 total
-Tests:       50 passed, 50 total
+Test Suites: 14 passed, 14 total
+Tests:       164 passed, 164 total
 ```
 
-### Run tests inside Docker (matches CI environment)
-
+### Run with coverage
 ```bash
-docker compose run --rm server npm test
+cd Server
+npm run test -- --coverage
+```
+
+### Run client tests
+```bash
+cd Client
+npm test
 ```
 
 ### Test suite overview
 
-| Suite | Tests | What it covers |
-|-------|-------|---------------|
-| `validation.test.js` | 21 | Unit tests — email, password, mood rating validators (TDD) |
-| `auth.middleware.test.js` | 8 | Unit tests — JWT authentication middleware |
-| `requireAdmin.middleware.test.js` | 5 | Unit tests — admin role middleware |
-| `mood.feature.test.js` | 17 | **Functional tests** — Register → Login → Log Mood → Resources pathway |
-| **Total** | **50** | |
+| Suite | Tests | Type | What it covers |
+|-------|-------|------|----------------|
+| `validation.test.js` | 21 | Unit | Email, password, mood rating validators |
+| `auth.middleware.test.js` | 8 | Unit | JWT authentication middleware |
+| `requireAdmin.middleware.test.js` | 5 | Unit | Admin role guard |
+| `requireTherapist.middleware.test.js` | 6 | Unit | Therapist role guard |
+| `audit.util.test.js` | 6 | Unit | Audit log writer |
+| `mood.feature.test.js` | 17 | Functional | Register → Login → Log Mood → Resources |
+| `user.feature.test.js` | — | Functional | Profile, GDPR export, change password, delete account |
+| `passwordReset.feature.test.js` | — | Functional | Forgot password → reset flow |
+| `savedResources.feature.test.js` | — | Functional | Save/unsave resources |
+| `admin.feature.test.js` | — | Functional | User management, resource CRUD, booking confirm/decline |
+| `therapist.feature.test.js` | 12 | Functional | Add/remove slots, conflict detection, bookings |
+| `security.test.js` | — | Security | XSS and SQL injection prevention |
+| `security/attacks.test.js` | — | Security | JWT tampering, role escalation, mass-assignment |
+| `integration/user-journey.test.js` | — | Integration | End-to-end user journey |
+| **Total** | **164** | | |
 
-The functional tests (`mood.feature.test.js`) use **supertest** to send real HTTP requests through the full Express middleware stack. The database and bcrypt are mocked for reproducibility — tests run without a live MySQL instance.
+All functional and integration tests use **supertest** to send real HTTP requests through the full Express stack. Database and bcrypt are mocked — no live MySQL needed.
 
 ---
 
-## ⚙️ CI/CD (GitHub Actions)
+## 🔐 Security
 
-Every push and pull request triggers:
-
-✅ **Code Quality** — ESLint + Prettier checks on Client & Server  
-✅ **Docker Build & Health Check** — builds the server image and verifies `/health` responds
-
-View results in the **Actions** tab on GitHub.
-
-See [GitHub Actions Guide](./docs/GithubActions.md) for details.
+| Control | Implementation |
+|---------|---------------|
+| Password hashing | bcrypt (cost 10) |
+| Access tokens | JWT, 15-min expiry |
+| Refresh tokens | JWT, 7-day expiry, httpOnly + sameSite strict cookies |
+| Security headers | Helmet (CSP, HSTS, X-Frame-Options, etc.) |
+| Rate limiting | 5 req/15 min on `/api/auth/*`; 100 req/15 min global |
+| Body size cap | 100 KB — mitigates payload flooding |
+| Password policy | ≥8 chars, must include letter + digit |
+| JWT secret enforcement | Fails fast if `JWT_SECRET` < 32 chars |
+| SQL injection | Parameterised queries throughout |
+| Audit log | Append-only `audit_log` table — login, logout, password changes, admin actions |
+| GDPR | Soft-delete with data anonymisation; full data export endpoint |
+| Threat model | STRIDE analysis — see [`docs/threat-model.md`](./docs/threat-model.md) |
 
 ---
 
 ## 🗄️ Database Schema
 
-Six main tables:
-- **users** - User accounts (email, password hash)
-- **mood_logs** - Mood tracking entries
-- **resources** - Mental health resources
-- **saved_resources** - User-saved resources
-- **therapy_slots** - Available appointment slots
-- **bookings** - Therapy booking requests
+Seven tables with idempotent runtime migrations (`migrate.js`):
 
-Schema is auto-applied on first Docker Compose start via `./Server/src/db/schema.sql`.
-
----
-
-## 🔑 Key Features
-
-### 1. Mood Tracking
-- Log mood on 1-5 scale
-- Add optional description
-- View mood history
-- Crisis detection for low ratings
-
-### 2. Therapy Booking
-- Browse available slots
-- Filter by time of day (morning/afternoon/evening)
-- Submit booking requests
-- Track booking status (pending/confirmed/declined)
-
-### 3. Resource Library
-- Browse mental health resources
-- Filtered by mood range
-- Save favorites
-- External links to support services
-
-### 4. Crisis Support
-- Automatic detection when mood = 1
-- Immediate display of crisis helplines
-- NHS, Samaritans, Cardiff Met resources
+| Table | Purpose |
+|-------|---------|
+| `users` | Accounts — email, bcrypt hash, role, soft-delete |
+| `mood_logs` | Mood entries (rating 1–5, optional description) |
+| `resources` | Curated mental health resources with category + mood range |
+| `saved_resources` | User ↔ resource saves |
+| `therapy_slots` | Therapist availability slots |
+| `bookings` | Booking requests with status (pending/confirmed/declined) |
+| `password_resets` | Hashed reset tokens with expiry and used-at timestamp |
+| `audit_log` | Append-only security event log |
 
 ---
 
-## 🔒 Security
+## 👥 User Roles
 
-- ✅ Password hashing with bcrypt
-- ✅ JWT access tokens (15min expiry)
-- ✅ Refresh tokens (7 days, httpOnly cookies)
-- ✅ Protected API routes
-- ✅ Input validation
-- ✅ CORS configuration
-- ✅ SQL injection prevention (parameterized queries)
+| Role | Access |
+|------|--------|
+| `user` | Mood logging, resource browsing, booking, profile/GDPR |
+| `therapist` | All user access + manage own availability slots |
+| `admin` | All access + user role management, resource CRUD, booking confirm/decline |
 
 ---
 
-## 📖 Documentation
+## ⚙️ CI/CD
 
-- [Server API Documentation](./docs/Server.md) - Detailed API reference
-- [Client Documentation](./docs/Client.md) - Frontend setup and structure
-- [GitHub Actions Guide](./docs/GithubActions.md) - CI/CD automation
+Every push and pull request triggers two workflows:
 
----
+**Code Quality** (`code-quality.yml`)
+- ESLint on Client + Server
+- Prettier format check on Client + Server
+- Jest test suite with coverage upload
 
-## 🎯 Development Workflow
+**Docker Build & Test** (`docker-test.yml`)
+- Builds the production Docker image
+- Starts full docker-compose stack (API + MySQL)
+- Waits for DB schema initialisation
+- Smoke-tests `/health`, `/api/auth/register`, `/api/auth/login`
 
-### 1. Create a branch
-```bash
-git checkout -b feature/your-feature-name
-```
-
-### 2. Make changes
-```bash
-# Code your feature
-```
-
-### 3. Check quality locally
-```bash
-cd Client && npm run lint:fix && npm run format
-cd ../Server && npm run lint:fix && npm run format
-```
-
-### 4. Commit and push
-```bash
-git add .
-git commit -m "feat: add your feature"
-git push origin feature/your-feature-name
-```
-
-### 5. Check GitHub Actions
-- Go to **Actions** tab
-- Verify all checks pass ✅
-
-### 6. Create Pull Request
-- Open PR on GitHub
-- Automated checks run
-- Merge when green ✅
+See [`docs/GithubActions.md`](./docs/GithubActions.md) for full pipeline documentation.
 
 ---
 
-## 🛠️ Scripts Reference
+## 🔧 Development
 
-### Client
+### Local development (without Docker)
+
+**Server**
 ```bash
-npm run dev           # Start dev server (port 5173)
-npm run build         # Build for production
-npm run preview       # Preview production build
-npm run lint          # Check for lint errors
-npm run lint:fix      # Auto-fix lint errors
-npm run format        # Format code with Prettier
-npm run format:check  # Check if code is formatted
+cd Server
+npm install
+# Copy and fill in Server/.env (see Server/.env.example)
+npm run dev        # nodemon — auto-restarts on changes, port 3000
 ```
 
-### Server
+**Client**
 ```bash
-npm start             # Start production server
-npm run dev           # Start with nodemon (auto-reload)
-npm test              # Run all 50 unit + functional tests
-npm run lint          # Check for lint errors
-npm run lint:fix      # Auto-fix lint errors
-npm run format        # Format code with Prettier
-npm run format:check  # Check if code is formatted
+cd Client
+npm install
+npm run dev        # Vite HMR, port 5173
 ```
 
-### Docker
+### Code quality scripts
+
 ```bash
-docker compose up --build    # Build and start all services
-docker compose down          # Stop all services
-docker compose down -v       # Stop and remove volumes
-docker compose logs server   # View server logs
-docker compose logs db       # View database logs
-docker compose ps            # List running containers
+# Lint
+npm run lint
+npm run lint:fix
+
+# Format
+npm run format:check
+npm run format
 ```
+
+### Docker commands
+
+```bash
+docker compose up --build       # Build and start
+docker compose down             # Stop
+docker compose down -v          # Stop and wipe volumes (fresh DB)
+docker compose logs server      # Server logs
+docker compose logs db          # DB logs
+docker compose ps               # Container status
+```
+
+---
+
+## 🌍 Environment Variables
+
+Copy `Server/.env.example` to `Server/.env` and fill in:
+
+```env
+PORT=3000
+CLIENT_URL=http://localhost:5173
+
+DB_HOST=db
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=your-db-password
+DB_NAME=mental_health_app
+
+JWT_SECRET=<min-32-char-random-string>
+REFRESH_SECRET=<min-32-char-random-string>
+NODE_ENV=development
+```
+
+Generate secrets:
+```bash
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
+
+---
+
+## 📚 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [`docs/nfr.md`](./docs/nfr.md) | Non-functional requirements with codebase evidence |
+| [`docs/threat-model.md`](./docs/threat-model.md) | STRIDE threat analysis (23 threats) |
+| [`docs/deployment.md`](./docs/deployment.md) | VPS deployment guide — Nginx, Let's Encrypt, backups |
+| [`docs/runbook.md`](./docs/runbook.md) | Incident response — 5 scenarios with diagnose/recover steps |
+| [`docs/GithubActions.md`](./docs/GithubActions.md) | CI/CD pipeline documentation |
+| [`docs/sprint02.md`](./docs/sprint02.md) | Sprint 2 summary and retrospective |
+| [`docs/sprint03.md`](./docs/sprint03.md) | Sprint 3 summary and retrospective |
+| [`docs/Server.md`](./docs/Server.md) | API endpoint reference |
+| [`docs/Client.md`](./docs/Client.md) | Frontend structure and setup |
+
+---
+
+## ♿ Accessibility
+
+- Skip-to-main-content link
+- ARIA landmarks and labels throughout
+- Focus rings on all interactive elements
+- Mobile-responsive hamburger navigation
+- Lazy-loaded heavy pages to maintain performance
 
 ---
 
 ## 🐛 Troubleshooting
-
-### Docker issues
 
 **Containers won't start:**
 ```bash
@@ -399,82 +379,34 @@ docker compose down -v
 docker compose up --build
 ```
 
-**Can't connect to database:**
-- Check if port 3306 is already in use
-- Verify environment variables in docker-compose.yml
+**Can't connect to the database:**
+- Check port 3306 is free: `docker compose ps`
+- Verify `Server/.env` has correct `DB_*` values
 
 **Server crashes on startup:**
 ```bash
 docker compose logs server
+# Common cause: JWT_SECRET missing or < 32 chars
 ```
 
-### Client issues
-
-**Page not loading:**
-- Check if Vite dev server is running on port 5173
-- Verify API proxy in `vite.config.js`
-
-**API calls fail:**
-- Ensure server is running on port 3000
-- Check browser console for CORS errors
-
-### ESLint/Prettier issues
-
-**Checks failing:**
+**CI format check failing:**
 ```bash
-npm run lint:fix
-npm run format
+cd Server && npm run format
+cd ../Client && npm run format
+git add -A && git commit -m "style: fix formatting"
 ```
 
 ---
 
-## 🤝 Contributing
+## 📞 Crisis Support Resources
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Run lint and format checks
-5. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-6. Push to the branch (`git push origin feature/amazing-feature`)
-7. Open a Pull Request
-
-All PRs must pass automated checks before merging.
-
----
-
-## 📝 License
-
-This project is part of Cardiff Metropolitan University coursework for SEN5002 Agile Development and DevOps.
-
----
-
-## 👥 Authors
-
-- Cardiff Met Students - SEN5002 Module
-
----
-
-## 🙏 Acknowledgments
-
-- Mental health resources provided by NHS, Samaritans, and Cardiff Met Wellbeing
-- Built for educational purposes as part of Agile Development coursework
-
----
-
-## 📞 Support Resources
-
-**Crisis Support:**
+**If you or someone you know needs support:**
 - **Samaritans**: 116 123 (24/7, free)
 - **NHS Urgent Mental Health**: 111 (option 2)
 - **Cardiff Met Wellbeing**: [cardiffmet.ac.uk/wellbeing](https://www.cardiffmet.ac.uk/wellbeing)
 
 ---
 
-## 🔗 Links
+## 📝 Licence
 
-- [API Documentation](http://localhost:3000/api-docs) (when server running)
-- [Server Docs](./docs/Server.md)
-- [Client Docs](./docs/Client.md)
-- [GitHub Actions](./docs/GithubActions.md)
-
-
+Cardiff Metropolitan University coursework — SEN5002 Agile Development and DevOps.
