@@ -3,7 +3,7 @@ const db = require('../db/connection');
 const { isValidEmail, isValidPassword } = require('../utils/validation');
 const { audit } = require('../utils/audit');
 
-const SALT_ROUNDS = 10;
+const SALT_ROUNDS = 12;
 
 // GET /api/users/me
 async function getProfile(req, res) {

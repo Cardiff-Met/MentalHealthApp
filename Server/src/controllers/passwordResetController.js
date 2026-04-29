@@ -4,7 +4,7 @@ const db = require('../db/connection');
 const { isValidPassword } = require('../utils/validation');
 const { audit } = require('../utils/audit');
 
-const SALT_ROUNDS = 10;
+const SALT_ROUNDS = 12;
 const TOKEN_EXPIRY_MINUTES = 30;
 
 // POST /api/auth/forgot-password
