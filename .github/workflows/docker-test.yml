@@ -17,16 +17,16 @@ jobs:
 
       - name: Create .env file with secrets
         run: |
-          mkdir -p server
-          echo "PORT=3000" >> server/.env
-          echo "CLIENT_URL=http://localhost:5173" >> server/.env
-          echo "DB_HOST=db" >> server/.env
-          echo "DB_PORT=3306" >> server/.env
-          echo "DB_USER=root" >> server/.env
-          echo "DB_PASSWORD=root1234" >> server/.env
-          echo "DB_NAME=mental_health_app" >> server/.env
-          echo "JWT_SECRET=ci-jwt-secret-value-that-is-long-enough-here" >> server/.env
-          echo "REFRESH_SECRET=ci-refresh-secret-value-that-is-long-enough" >> server/.env
+          mkdir -p Server
+          echo "PORT=3000" >> Server/.env
+          echo "CLIENT_URL=http://localhost:5173" >> Server/.env
+          echo "DB_HOST=db" >> Server/.env
+          echo "DB_PORT=3306" >> Server/.env
+          echo "DB_USER=root" >> Server/.env
+          echo "DB_PASSWORD=root1234" >> Server/.env
+          echo "DB_NAME=mental_health_app" >> Server/.env
+          echo "JWT_SECRET=ci-jwt-secret-value-that-is-long-enough-here" >> Server/.env
+          echo "REFRESH_SECRET=ci-refresh-secret-value-that-is-long-enough" >> Server/.env
 
       - name: Build Docker images
         run: docker compose build
@@ -126,4 +126,4 @@ jobs:
         if: always()
         run: |
           docker compose down -v
-          rm -f server/.env
+          rm -f Server/.env

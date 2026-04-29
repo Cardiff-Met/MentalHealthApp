@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const db = require('../db/connection');
 const { isValidPassword } = require('../utils/validation');
+const { audit } = require('../utils/audit');
 
 const SALT_ROUNDS = 10;
 const TOKEN_EXPIRY_MINUTES = 30;
@@ -49,6 +50,7 @@ async function forgotPassword(req, res) {
     const resetLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${token}`;
     console.log(`[PASSWORD RESET] Reset link for ${email}: ${resetLink}`);
 
+    await audit(req, 'forgot_password', { userId });
     res.status(200).json({
       message: 'If that email exists you will receive a reset link shortly.',
     });
@@ -105,6 +107,7 @@ async function resetPassword(req, res) {
     // Mark token as used
     await db.query('UPDATE password_resets SET used_at = NOW() WHERE id = ?', [reset.id]);
 
+    await audit(req, 'reset_password', { userId: reset.user_id });
     res.json({ message: 'Password reset successfully. You can now log in.' });
   } catch (err) {
     console.error('Reset password error:', err);

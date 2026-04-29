@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../db/connection');
 const { isValidEmail, isValidPassword } = require('../utils/validation');
+const { audit } = require('../utils/audit');
 
 const SALT_ROUNDS = 10;
 
@@ -84,6 +85,7 @@ async function login(req, res) {
     const passwordMatch = await bcrypt.compare(password, user.password);
 
     if (!passwordMatch) {
+      await audit(req, 'login_fail', { email });
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
@@ -99,6 +101,7 @@ async function login(req, res) {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
+    await audit(req, 'login_success', { userId: user.id, role: user.role });
     res.json({ message: 'Login successful.', accessToken });
   } catch (err) {
     console.error('Login error:', err);
@@ -127,6 +130,7 @@ async function refresh(req, res) {
 
 // POST /api/auth/logout
 async function logout(req, res) {
+  await audit(req, 'logout');
   res.clearCookie('refreshToken');
   res.json({ message: 'Logged out successfully.' });
 }

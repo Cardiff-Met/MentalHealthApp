@@ -1,4 +1,5 @@
 const db = require('../db/connection');
+const { audit } = require('../utils/audit');
 
 // GET /api/admin/users
 async function listUsers(req, res) {
@@ -134,6 +135,7 @@ async function updateUserRole(req, res) {
     }
 
     await db.query('UPDATE users SET role = ? WHERE id = ?', [role, userId]);
+    await audit(req, 'admin_update_role', { targetUserId: userId, newRole: role });
     res.json({ message: `User role updated to ${role}.` });
   } catch (err) {
     console.error('Admin update role error:', err);
@@ -201,6 +203,7 @@ async function updateBooking(req, res) {
       ]);
     }
 
+    await audit(req, 'admin_update_booking', { bookingId, status });
     res.json({ message: `Booking ${status}.` });
   } catch (err) {
     console.error('Admin update booking error:', err);

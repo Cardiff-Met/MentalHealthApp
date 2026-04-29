@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const db = require('../db/connection');
 const { isValidEmail, isValidPassword } = require('../utils/validation');
+const { audit } = require('../utils/audit');
 
 const SALT_ROUNDS = 10;
 
@@ -100,6 +101,7 @@ async function changePassword(req, res) {
     const hashed = await bcrypt.hash(newPassword, SALT_ROUNDS);
     await db.query('UPDATE users SET password = ? WHERE id = ?', [hashed, req.user.userId]);
 
+    await audit(req, 'change_password');
     res.json({ message: 'Password updated successfully.' });
   } catch (err) {
     console.error('Change password error:', err);
@@ -135,6 +137,8 @@ async function deleteAccount(req, res) {
 
     // Anonymise mood log descriptions (GDPR — remove personal content)
     await db.query('UPDATE mood_logs SET description = NULL WHERE user_id = ?', [req.user.userId]);
+
+    await audit(req, 'delete_account');
 
     // Clear refresh token cookie
     res.clearCookie('refreshToken');
