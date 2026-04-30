@@ -218,7 +218,7 @@ All functional and integration tests use **supertest** to send real HTTP request
 | Access tokens | JWT, 15-min expiry |
 | Refresh tokens | JWT, 7-day expiry, httpOnly + sameSite strict cookies |
 | Security headers | Helmet (CSP, HSTS, X-Frame-Options, etc.) |
-| Rate limiting | 5 req/15 min on `/api/auth/*`; 100 req/15 min global |
+| Rate limiting | 50 req/15 min on `/api/auth/*`; 100 req/15 min global |
 | Body size cap | 100 KB — mitigates payload flooding |
 | Password policy | ≥8 chars, must include letter + digit |
 | JWT secret enforcement | Fails fast if `JWT_SECRET` < 32 chars |
