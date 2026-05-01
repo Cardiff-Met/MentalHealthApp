@@ -14,6 +14,9 @@ const variants = {
     'bg-red-600 hover:bg-red-700 text-white shadow-sm focus-visible:ring-red-500',
   ghost:
     'bg-transparent hover:bg-slate-100 text-slate-600 focus-visible:ring-slate-400',
+  teal: 'bg-teal-600 hover:bg-teal-700 text-white shadow-sm focus-visible:ring-teal-500',
+  purple:
+    'bg-purple-600 hover:bg-purple-700 text-white shadow-sm focus-visible:ring-purple-500',
 };
 
 const sizes = {
