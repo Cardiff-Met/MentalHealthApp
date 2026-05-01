@@ -126,5 +126,7 @@ INSERT INTO therapy_slots (slot_date, slot_time, time_of_day) VALUES
   ('2026-05-16','09:00:00','morning'),('2026-05-16','10:00:00','morning'),('2026-05-16','11:00:00','morning'),('2026-05-16','14:00:00','afternoon'),('2026-05-16','15:00:00','afternoon'),('2026-05-16','16:00:00','afternoon');
 
 -- Seed admin user (password: Admin1234! — bcrypt hash, 10 rounds)
+-- Seed therapist user (password: Therapist1234! — bcrypt hash, 10 rounds)
 INSERT IGNORE INTO users (email, password, role) VALUES
-  ('admin@cardiffmet.ac.uk', '$2b$10$9z47CH5TqyvEOq0zC3f7NOQKV6adjALvgrhL2YO/jS1TqzlijBOp6', 'admin');
+  ('admin@cardiffmet.ac.uk',     '$2b$10$9z47CH5TqyvEOq0zC3f7NOQKV6adjALvgrhL2YO/jS1TqzlijBOp6', 'admin'),
+  ('therapist@cardiffmet.ac.uk', '$2b$10$yeEIkYXeflVgaIXYYfTRwOJTS63Kk.A75ISuVL/Z6e/VLJcO8qXdy', 'therapist');
