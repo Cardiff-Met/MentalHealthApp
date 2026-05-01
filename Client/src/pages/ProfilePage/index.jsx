@@ -353,7 +353,6 @@ export default function ProfilePage() {
 
       {/* Two-column grid on md+, single column on mobile */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-
         {/* ── Left column: account info + edit name ── */}
         <div className="space-y-6">
           {/* Account details */}
