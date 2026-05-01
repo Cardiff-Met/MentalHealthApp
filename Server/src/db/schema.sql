@@ -109,21 +109,6 @@ INSERT INTO resources (title, description, url, category, min_mood, max_mood) VA
   ('NHS - Sleep and Tiredness Tips',   'Advice on improving sleep quality and managing fatigue.',    'https://www.nhs.uk/live-well/sleep',     'self-help',   3, 5),
   ('Headspace - Meditation',           'Guided meditation for stress relief and improved focus.',    'https://www.headspace.com',              'mindfulness', 4, 5);
 
--- Seed therapy slots (3 weeks of Mon–Fri, 09–11 morning, 14–16 afternoon, 1 h each)
-INSERT INTO therapy_slots (slot_date, slot_time, time_of_day) VALUES
-  ('2026-04-28','09:00:00','morning'),('2026-04-28','10:00:00','morning'),('2026-04-28','11:00:00','morning'),('2026-04-28','14:00:00','afternoon'),('2026-04-28','15:00:00','afternoon'),('2026-04-28','16:00:00','afternoon'),
-  ('2026-04-29','09:00:00','morning'),('2026-04-29','10:00:00','morning'),('2026-04-29','11:00:00','morning'),('2026-04-29','14:00:00','afternoon'),('2026-04-29','15:00:00','afternoon'),('2026-04-29','16:00:00','afternoon'),
-  ('2026-04-30','09:00:00','morning'),('2026-04-30','10:00:00','morning'),('2026-04-30','11:00:00','morning'),('2026-04-30','14:00:00','afternoon'),('2026-04-30','15:00:00','afternoon'),('2026-04-30','16:00:00','afternoon'),
-  ('2026-05-01','09:00:00','morning'),('2026-05-01','10:00:00','morning'),('2026-05-01','11:00:00','morning'),('2026-05-01','14:00:00','afternoon'),('2026-05-01','15:00:00','afternoon'),('2026-05-01','16:00:00','afternoon'),
-  ('2026-05-06','09:00:00','morning'),('2026-05-06','10:00:00','morning'),('2026-05-06','11:00:00','morning'),('2026-05-06','14:00:00','afternoon'),('2026-05-06','15:00:00','afternoon'),('2026-05-06','16:00:00','afternoon'),
-  ('2026-05-07','09:00:00','morning'),('2026-05-07','10:00:00','morning'),('2026-05-07','11:00:00','morning'),('2026-05-07','14:00:00','afternoon'),('2026-05-07','15:00:00','afternoon'),('2026-05-07','16:00:00','afternoon'),
-  ('2026-05-08','09:00:00','morning'),('2026-05-08','10:00:00','morning'),('2026-05-08','11:00:00','morning'),('2026-05-08','14:00:00','afternoon'),('2026-05-08','15:00:00','afternoon'),('2026-05-08','16:00:00','afternoon'),
-  ('2026-05-09','09:00:00','morning'),('2026-05-09','10:00:00','morning'),('2026-05-09','11:00:00','morning'),('2026-05-09','14:00:00','afternoon'),('2026-05-09','15:00:00','afternoon'),('2026-05-09','16:00:00','afternoon'),
-  ('2026-05-12','09:00:00','morning'),('2026-05-12','10:00:00','morning'),('2026-05-12','11:00:00','morning'),('2026-05-12','14:00:00','afternoon'),('2026-05-12','15:00:00','afternoon'),('2026-05-12','16:00:00','afternoon'),
-  ('2026-05-13','09:00:00','morning'),('2026-05-13','10:00:00','morning'),('2026-05-13','11:00:00','morning'),('2026-05-13','14:00:00','afternoon'),('2026-05-13','15:00:00','afternoon'),('2026-05-13','16:00:00','afternoon'),
-  ('2026-05-14','09:00:00','morning'),('2026-05-14','10:00:00','morning'),('2026-05-14','11:00:00','morning'),('2026-05-14','14:00:00','afternoon'),('2026-05-14','15:00:00','afternoon'),('2026-05-14','16:00:00','afternoon'),
-  ('2026-05-15','09:00:00','morning'),('2026-05-15','10:00:00','morning'),('2026-05-15','11:00:00','morning'),('2026-05-15','14:00:00','afternoon'),('2026-05-15','15:00:00','afternoon'),('2026-05-15','16:00:00','afternoon'),
-  ('2026-05-16','09:00:00','morning'),('2026-05-16','10:00:00','morning'),('2026-05-16','11:00:00','morning'),('2026-05-16','14:00:00','afternoon'),('2026-05-16','15:00:00','afternoon'),('2026-05-16','16:00:00','afternoon');
 
 -- Seed admin user (password: Admin1234! — bcrypt hash, 10 rounds)
 -- Seed therapist user (password: Therapist1234! — bcrypt hash, 10 rounds)
