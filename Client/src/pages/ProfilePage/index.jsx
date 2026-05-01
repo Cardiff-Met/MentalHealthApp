@@ -39,7 +39,7 @@ function EditNameForm({ authFetch, currentName, onSaved }) {
   }
 
   return (
-    <Card className="mb-6">
+    <Card>
       <h2 className="text-lg font-semibold text-slate-800 mb-5">
         Display name
       </h2>
@@ -189,7 +189,7 @@ function ChangePasswordForm({ authFetch }) {
   );
 }
 
-// ─── Delete Account Dialog ───────────────────────────────────────────────────
+// ─── Delete Account Section ──────────────────────────────────────────────────
 
 function DeleteAccountSection({ authFetch, logout }) {
   const [confirming, setConfirming] = useState(false);
@@ -226,7 +226,7 @@ function DeleteAccountSection({ authFetch, logout }) {
   }
 
   return (
-    <Card>
+    <Card className="border-red-100">
       <h2 className="text-lg font-semibold text-red-700 mb-2">
         Delete account
       </h2>
@@ -344,94 +344,99 @@ export default function ProfilePage() {
     : null;
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div>
+      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900">Your profile</h1>
         <p className="text-slate-500 mt-1">Manage your account settings.</p>
       </div>
 
-      {/* Account info */}
-      <Card className="mb-6">
-        <h2 className="text-lg font-semibold text-slate-800 mb-4">
-          Account details
-        </h2>
-        <dl className="space-y-3">
-          {profileData?.name && (
-            <div className="flex items-center justify-between">
-              <dt className="text-sm font-medium text-slate-500">Name</dt>
-              <dd className="text-sm text-slate-800">{profileData.name}</dd>
-            </div>
-          )}
-          <div className="flex items-center justify-between">
-            <dt className="text-sm font-medium text-slate-500">Email</dt>
-            <dd className="text-sm text-slate-800">{user?.email ?? '—'}</dd>
-          </div>
-          <div className="flex items-center justify-between">
-            <dt className="text-sm font-medium text-slate-500">Role</dt>
-            <dd>
-              <span
-                className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                  user?.role === 'admin'
-                    ? 'bg-violet-100 text-violet-700'
-                    : 'bg-indigo-100 text-indigo-700'
-                }`}
-              >
-                {user?.role ?? 'user'}
-              </span>
-            </dd>
-          </div>
-          {joinedDate && (
-            <div className="flex items-center justify-between">
-              <dt className="text-sm font-medium text-slate-500">
-                Member since
-              </dt>
-              <dd className="text-sm text-slate-800">{joinedDate}</dd>
-            </div>
-          )}
-        </dl>
+      {/* Two-column grid on md+, single column on mobile */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+        {/* ── Left column: account info + edit name ── */}
+        <div className="space-y-6">
+          {/* Account details */}
+          <Card>
+            <h2 className="text-lg font-semibold text-slate-800 mb-4">
+              Account details
+            </h2>
+            <dl className="space-y-3">
+              {profileData?.name && (
+                <div className="flex items-center justify-between">
+                  <dt className="text-sm font-medium text-slate-500">Name</dt>
+                  <dd className="text-sm text-slate-800">{profileData.name}</dd>
+                </div>
+              )}
+              <div className="flex items-center justify-between">
+                <dt className="text-sm font-medium text-slate-500">Email</dt>
+                <dd className="text-sm text-slate-800">{user?.email ?? '—'}</dd>
+              </div>
+              <div className="flex items-center justify-between">
+                <dt className="text-sm font-medium text-slate-500">Role</dt>
+                <dd>
+                  <span
+                    className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                      user?.role === 'admin'
+                        ? 'bg-violet-100 text-violet-700'
+                        : 'bg-indigo-100 text-indigo-700'
+                    }`}
+                  >
+                    {user?.role ?? 'user'}
+                  </span>
+                </dd>
+              </div>
+              {joinedDate && (
+                <div className="flex items-center justify-between">
+                  <dt className="text-sm font-medium text-slate-500">
+                    Member since
+                  </dt>
+                  <dd className="text-sm text-slate-800">{joinedDate}</dd>
+                </div>
+              )}
+            </dl>
 
-        {/* Export data */}
-        <div className="mt-5 pt-5 border-t border-slate-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-700">
-                Export my data
-              </p>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Download a copy of all your data (GDPR right to portability).
-              </p>
+            {/* Export data */}
+            <div className="mt-5 pt-5 border-t border-slate-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-700">
+                    Export my data
+                  </p>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Download all your data (GDPR right to portability).
+                  </p>
+                </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={exportLoading}
+                  onClick={handleExport}
+                >
+                  {exportLoading ? 'Exporting…' : 'Download JSON'}
+                </Button>
+              </div>
+              {exportError && (
+                <ErrorBanner message={exportError} className="mt-3" />
+              )}
             </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={exportLoading}
-              onClick={handleExport}
-            >
-              {exportLoading ? 'Exporting…' : 'Download JSON'}
-            </Button>
-          </div>
-          {exportError && (
-            <ErrorBanner message={exportError} className="mt-3" />
-          )}
+          </Card>
+
+          {/* Edit name */}
+          <EditNameForm
+            authFetch={authFetch}
+            currentName={profileData?.name}
+            onSaved={(newName) =>
+              setProfileData((prev) => ({ ...prev, name: newName }))
+            }
+          />
         </div>
-      </Card>
 
-      {/* Display name */}
-      <EditNameForm
-        authFetch={authFetch}
-        currentName={profileData?.name}
-        onSaved={(newName) =>
-          setProfileData((prev) => ({ ...prev, name: newName }))
-        }
-      />
-
-      {/* Change password */}
-      <div className="mb-6">
-        <ChangePasswordForm authFetch={authFetch} />
+        {/* ── Right column: change password + delete account ── */}
+        <div className="space-y-6">
+          <ChangePasswordForm authFetch={authFetch} />
+          <DeleteAccountSection authFetch={authFetch} logout={logout} />
+        </div>
       </div>
-
-      {/* Delete account */}
-      <DeleteAccountSection authFetch={authFetch} logout={logout} />
     </div>
   );
 }
