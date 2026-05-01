@@ -23,8 +23,7 @@ const features = [
     label: 'View resources',
     colour: 'bg-teal-50 border-teal-100',
     iconBg: 'bg-teal-100',
-    btnVariant: 'ghost',
-    btnClass: 'bg-teal-600 hover:bg-teal-700 text-white',
+    btnVariant: 'teal',
   },
   {
     icon: '📅',
@@ -35,8 +34,7 @@ const features = [
     label: 'Book now',
     colour: 'bg-purple-50 border-purple-100',
     iconBg: 'bg-purple-100',
-    btnVariant: 'ghost',
-    btnClass: 'bg-purple-600 hover:bg-purple-700 text-white',
+    btnVariant: 'purple',
   },
 ];
 
@@ -97,7 +95,7 @@ export default function DashboardPage() {
             <p className="text-sm text-slate-600 flex-1">{f.description}</p>
             <Button
               onClick={() => navigate(f.action)}
-              className={`mt-5 w-full ${f.btnClass ?? ''}`}
+              className="mt-5 w-full"
               variant={f.btnVariant}
             >
               {f.label}
