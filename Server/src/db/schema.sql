@@ -1,7 +1,7 @@
 -- SEN5002 Mental Health Support App
 -- Initial Database Schema
 
-CREATE DATABASE IF NOT EXISTS mental_health_app;
+CREATE DATABASE IF NOT EXISTS mental_health_app CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE mental_health_app;
 
 -- Users table
@@ -100,14 +100,14 @@ CREATE TABLE IF NOT EXISTS audit_log (
 
 -- Seed resources
 INSERT INTO resources (title, description, url, category, min_mood, max_mood) VALUES
-  ('Crisis Support – Samaritans',      'Free confidential support. Call 116 123 anytime.',          'https://www.samaritans.org',             'crisis',      1, 1),
+  ('Crisis Support - Samaritans',      'Free confidential support. Call 116 123 anytime.',          'https://www.samaritans.org',             'crisis',      1, 1),
   ('NHS Urgent Mental Health Support', 'Call 111 and select option 2 for urgent support.',           'https://www.nhs.uk/mental-health',       'crisis',      1, 2),
-  ('Student Minds – Managing Stress',  'Practical tips for managing stress during exam periods.',    'https://www.studentminds.org.uk',        'anxiety',     2, 3),
-  ('Calm – Breathing Exercises',       'Guided breathing and mindfulness to reduce anxiety.',        'https://www.calm.com',                   'anxiety',     2, 4),
+  ('Student Minds - Managing Stress',  'Practical tips for managing stress during exam periods.',    'https://www.studentminds.org.uk',        'anxiety',     2, 3),
+  ('Calm - Breathing Exercises',       'Guided breathing and mindfulness to reduce anxiety.',        'https://www.calm.com',                   'anxiety',     2, 4),
   ('Cardiff Met Wellbeing Services',   'Book an appointment with the university wellbeing team.',    'https://www.cardiffmet.ac.uk/wellbeing', 'general',     1, 5),
-  ('MoodGym – Self-Help CBT',          'Free online cognitive behavioural therapy exercises.',       'https://moodgym.com.au',                 'self-help',   3, 5),
-  ('NHS – Sleep and Tiredness Tips',   'Advice on improving sleep quality and managing fatigue.',    'https://www.nhs.uk/live-well/sleep',     'self-help',   3, 5),
-  ('Headspace – Meditation',           'Guided meditation for stress relief and improved focus.',    'https://www.headspace.com',              'mindfulness', 4, 5);
+  ('MoodGym - Self-Help CBT',          'Free online cognitive behavioural therapy exercises.',       'https://moodgym.com.au',                 'self-help',   3, 5),
+  ('NHS - Sleep and Tiredness Tips',   'Advice on improving sleep quality and managing fatigue.',    'https://www.nhs.uk/live-well/sleep',     'self-help',   3, 5),
+  ('Headspace - Meditation',           'Guided meditation for stress relief and improved focus.',    'https://www.headspace.com',              'mindfulness', 4, 5);
 
 -- Seed therapy slots (3 weeks of Mon–Fri, 09–11 morning, 14–16 afternoon, 1 h each)
 INSERT INTO therapy_slots (slot_date, slot_time, time_of_day) VALUES
