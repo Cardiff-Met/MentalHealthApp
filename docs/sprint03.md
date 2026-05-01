@@ -58,7 +58,7 @@ By the end of Sprint 3 a marker can read the repository top-to-bottom, run the f
 | #37 | feat: Day 14 — Vitest component test suite | Luca | Noe | Merged |
 | #38 | docs: NFRs and STRIDE threat model | Luca | Noe | Merged |
 | #39 | test: integration journey + attack-vector security suites | Luca | Abdisamad | Merged |
-| #40 | feat(deploy): production compose, deployment guide, runbook | Luca | Noe | Open |
+| #40 | feat(deploy): production compose, deployment guide, runbook | Luca | Noe | Merged |
 
 Every PR was rebased onto the latest `main`, passed both CI workflows, and was squash-merged. PR #34 required a non-trivial rebase after Sprint 2's admin work landed; the conflict was resolved by keeping `HEAD` for the controller signature changes and re-targeting the PR to `main`.
 

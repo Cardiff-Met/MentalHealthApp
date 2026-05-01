@@ -153,35 +153,31 @@ main
 
 ---
 
-**Screenshot 1 — Feature branch created**
+**Screenshot 1 — All Sprint closed PRs**
 
-![Feature branch creation](./screenshots/branch-created.png)
+The screenshot below shows the full list of merged pull requests from Sprint 1, confirming feature branches were created, reviewed, and squash-merged into `main`.
 
-> *[ADD SCREENSHOT: GitHub repository → branches list, showing `9-implement-mvp-features-minimal-set` branch]*
-
----
-
-**Screenshot 2 — PR #15 opened**
-
-![PR #15 opened](./screenshots/pr-15-open.png)
-
-> *[ADD SCREENSHOT: GitHub PR #15 page showing title, description, changed files count, and reviewer assignment]*
+![Closed PRs](./assessment/closed_prs.png)
 
 ---
 
-**Screenshot 3 — CI checks passing**
+**Screenshot 2 — CI checks passing (code quality pipeline)**
 
-![CI checks passing](./screenshots/pr-15-ci-pass.png)
+The screenshot below shows the `code-quality` and `docker-test` GitHub Actions workflows passing on a Sprint 1 PR, with green ticks for ESLint, Prettier, and Docker smoke test.
 
-> *[ADD SCREENSHOT: PR #15 checks section showing green ticks for `code-quality` and `docker-test` workflows]*
+![CI both workflows passing](./assessment/ci_both.png)
 
 ---
 
-**Screenshot 4 — PR merged to main**
+**Screenshot 3 — Code quality CI workflow detail**
 
-![PR merged](./screenshots/pr-15-merged.png)
+![Code quality CI](./assessment/code_quality_ci.png)
 
-> *[ADD SCREENSHOT: PR #15 showing "Merged" purple badge and merge commit into main]*
+---
+
+**Screenshot 4 — Docker build CI workflow detail**
+
+![Docker CI](./assessment/docker_ci.png)
 
 ---
 

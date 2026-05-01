@@ -189,7 +189,7 @@ This represents a minimum usable version delivering core value while remaining r
 
 ## 4.2 Low-Fidelity Mock-Ups (Screen Specifications)
 
-> Replace this section with screenshots or photos of your actual wireframes when ready.
+The screen specifications below were agreed during Week 2 planning. The screenshots below each specification show the implemented screens from the final application, confirming that every planned screen was built as designed.
 
 ---
 
@@ -208,6 +208,10 @@ This represents a minimum usable version delivering core value while remaining r
 - Incorrect password
 - Required fields
 
+*Implemented screen:*
+
+![Login / Register screen](./assessment/login.png)
+
 ---
 
 ### Screen 2 – Dashboard
@@ -219,6 +223,10 @@ This represents a minimum usable version delivering core value while remaining r
 - "Record Mood" button
 - Recommended resources
 - Booking status summary (e.g., pending/confirmed)
+
+*Implemented screen:*
+
+![Dashboard screen](./assessment/dashboard.png)
 
 ---
 
@@ -235,6 +243,10 @@ This represents a minimum usable version delivering core value while remaining r
 - Confirmation message
 - Trigger personalised recommendations
 
+*Implemented screen:*
+
+![Mood input screen](./assessment/mood.png)
+
 ---
 
 ### Screen 4 – Resources Page
@@ -245,6 +257,10 @@ This represents a minimum usable version delivering core value while remaining r
 - Resource title
 - Short description
 - Link button
+
+*Implemented screen:*
+
+![Resources page](./assessment/resource.png)
 
 ---
 
@@ -275,6 +291,14 @@ This represents a minimum usable version delivering core value while remaining r
 
 ---
 
+### Screen 5 (continued) – Booking Calendar
+
+*Implemented screen:*
+
+![Booking calendar screen](./assessment/booking.png)
+
+---
+
 ### Screen 6 – Booking Status / Confirmation Page
 
 **Purpose:** Make booking outcome clear and reduce anxiety.
@@ -284,6 +308,10 @@ This represents a minimum usable version delivering core value while remaining r
 - If Confirmed: date/time + service location/contact notes
 - If Declined: explanation text + "Choose another slot" button
 - If Pending: "We will notify you when confirmed" message
+
+*Implemented screen:*
+
+![Booking status screen](./assessment/my_booking.png)
 
 ---
 

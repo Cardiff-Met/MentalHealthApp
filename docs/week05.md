@@ -10,7 +10,7 @@ The MindSpace application follows a standard **client-server architecture** with
 
 ### Architecture Diagram
 
-![System Architecture](./architecture.svg)
+![System Architecture](./architecture.png)
 
 ### Component Responsibilities
 
