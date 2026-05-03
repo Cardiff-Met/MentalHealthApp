@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { AuthContext } from './authContext';
+import BASE_URL from '@/api';
 
-/** Decode a JWT payload without verifying the signature (client-side only). */
 function decodeToken(token) {
   try {
     const payload = token.split('.')[1];
@@ -16,7 +16,6 @@ export function AuthProvider({ children }) {
     localStorage.getItem('accessToken') || null
   );
 
-  // Derived user object from the JWT payload (userId, email, role)
   const user = useMemo(() => decodeToken(accessToken), [accessToken]);
 
   function login(newAccessToken) {
@@ -27,13 +26,12 @@ export function AuthProvider({ children }) {
   function logout() {
     localStorage.removeItem('accessToken');
     setAccessToken(null);
-    // Clear the refresh token cookie on the server
-    fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    fetch(`${BASE_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' });
   }
 
   const refreshAccessToken = useCallback(async () => {
     try {
-      const res = await fetch('/api/auth/refresh', {
+      const res = await fetch(`${BASE_URL}/api/auth/refresh`, {
         method: 'POST',
         credentials: 'include',
       });
@@ -53,12 +51,12 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  // Wrapper around fetch that auto-refreshes on 403
   const authFetch = useCallback(
     async (url, options = {}) => {
       const token = localStorage.getItem('accessToken');
+      const fullUrl = `${BASE_URL}${url}`;
 
-      const response = await fetch(url, {
+      const response = await fetch(fullUrl, {
         ...options,
         credentials: 'include',
         headers: {
@@ -71,7 +69,7 @@ export function AuthProvider({ children }) {
         const newToken = await refreshAccessToken();
         if (!newToken) return response;
 
-        return fetch(url, {
+        return fetch(fullUrl, {
           ...options,
           credentials: 'include',
           headers: {
@@ -87,9 +85,7 @@ export function AuthProvider({ children }) {
   );
 
   return (
-    <AuthContext.Provider
-      value={{ accessToken, user, login, logout, authFetch }}
-    >
+    <AuthContext.Provider value={{ accessToken, user, login, logout, authFetch }}>
       {children}
     </AuthContext.Provider>
   );

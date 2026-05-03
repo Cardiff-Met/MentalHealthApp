@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context';
+import BASE_URL from '@/api';
 
 export default function LoginPage() {
   const [isRegister, setIsRegister] = useState(false);
@@ -20,7 +21,7 @@ export default function LoginPage() {
     const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
 
     try {
-      const res = await fetch(endpoint, {
+      const res = await fetch(`${BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
