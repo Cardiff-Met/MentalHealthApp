@@ -26,7 +26,10 @@ export function AuthProvider({ children }) {
   function logout() {
     localStorage.removeItem('accessToken');
     setAccessToken(null);
-    fetch(`${BASE_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+    fetch(`${BASE_URL}/api/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
   }
 
   const refreshAccessToken = useCallback(async () => {
@@ -85,7 +88,9 @@ export function AuthProvider({ children }) {
   );
 
   return (
-    <AuthContext.Provider value={{ accessToken, user, login, logout, authFetch }}>
+    <AuthContext.Provider
+      value={{ accessToken, user, login, logout, authFetch }}
+    >
       {children}
     </AuthContext.Provider>
   );
