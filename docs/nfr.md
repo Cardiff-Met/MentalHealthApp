@@ -13,7 +13,7 @@ This document captures the non-functional requirements (NFRs) that constrain how
 | **PERF-3** | First Contentful Paint on the dashboard | ≤ 2.0 s on 4G | Vite production build code-splits each route; Tailwind v4 JIT keeps CSS small. |
 | **PERF-4** | JSON body size limit | 100 KB | Enforced by `express.json({ limit: '100kb' })` in `Server/src/app.js`. |
 
-**Notes:** Performance has not been benchmarked under load — these targets are design goals to be validated with k6/Apache Bench during the deployment phase.
+**Notes:** The live deployment achieves a Lighthouse Performance score of 100/100 and Accessibility score of 96/100 on the production URL (https://mindspace.lucamartinet.dev). Server-side load testing with k6/Apache Bench remains a recommended future step.
 
 ---
 
@@ -21,9 +21,9 @@ This document captures the non-functional requirements (NFRs) that constrain how
 
 | ID | Requirement | Target | Evidence |
 |----|-------------|--------|----------|
-| **AVAIL-1** | Production uptime | ≥ 99.5% per month (~3.6h downtime budget) | Docker Compose with healthcheck on the DB; server waits for `db.healthy` before starting (see `docker-compose.yml`). |
-| **AVAIL-2** | Recovery time after a single-node DB crash | ≤ 5 minutes | MySQL data lives in a named volume; `docker compose up -d db` brings it back. |
-| **AVAIL-3** | Graceful start-up | Server must not accept traffic until DB ready | Healthcheck-gated startup (commit `34784b8`). |
+| **AVAIL-1** | Production uptime | ≥ 99.5% per month (~3.6h downtime budget) | Deployed on Railway with managed MySQL; Railway monitors service health and restarts failed services automatically. |
+| **AVAIL-2** | Recovery time after a single-node DB crash | ≤ 5 minutes | MySQL data lives in a Railway-managed persistent volume; service redeploy restores it. |
+| **AVAIL-3** | Graceful start-up | Server must not accept traffic until DB ready | Healthcheck-gated startup (commit `34784b8`); migrate.js runs on every boot. |
 
 ---
 
@@ -41,7 +41,7 @@ This document captures the non-functional requirements (NFRs) that constrain how
 
 | ID | Requirement | Implementation |
 |----|-------------|----------------|
-| **SEC-1** | Passwords never stored in plain text | `bcrypt` with cost factor 10 in `authController.js`. |
+| **SEC-1** | Passwords never stored in plain text | `bcrypt` with cost factor 12 in `authController.js`. |
 | **SEC-2** | All authenticated endpoints require a valid JWT | `requireAuth` middleware on every protected route. |
 | **SEC-3** | Refresh tokens are HTTP-only, SameSite, secure cookies | Cookie flags set in `authController.js` login response. |
 | **SEC-4** | Brute-force resistance on auth endpoints | `express-rate-limit` — 5 requests / 15 min on `/api/auth/*`. |

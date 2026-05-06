@@ -1,204 +1,226 @@
 # Runbook — MindSpace Operations
 
-This runbook describes how to diagnose and recover from common production incidents. All commands assume you are SSH'd into the production host as the `deploy` user, in `/home/deploy/mindspace`.
+**Version:** 1.0 | **Last updated:** May 2026
+**Platform:** Railway (managed cloud)
+**Stack:** React/Vite (Frontend) → Express 5 (Backend) → MySQL 8 (Database)
+**Live URL:** https://mindspace.lucamartinet.dev
+**API Health:** https://desirable-enchantment-production-7b63.up.railway.app/health
+
+All incidents are managed through the Railway dashboard at [railway.app](https://railway.app). There is no SSH access to a server.
 
 ---
 
 ## Quick reference
 
-| Symptom | Most likely cause | Page |
-|---------|-------------------|------|
-| Site returns `502 Bad Gateway` | API container down | [§1](#1-api-container-down) |
-| Site returns `504 Gateway Timeout` | API slow / overloaded | [§2](#2-api-slow-or-overloaded) |
-| API returns `500` on every request | DB unreachable | [§3](#3-database-down) |
-| Browser cannot reach the site at all | TLS / DNS / firewall | [§4](#4-tls-or-certificate-issue) |
-| Suspected breach / leaked secret | Rotate everything | [§5](#5-suspected-breach-or-leaked-secret) |
+| Symptom | Most likely cause | Playbook |
+|---------|-------------------|----------|
+| Site unreachable or 5xx errors | Backend service down | [§1 — API Down](#1-api-completely-down) |
+| Site responds but slowly | Backend overloaded | [§2 — Slow API](#2-slow-api) |
+| API returns 500 on every request | MySQL service down | [§3 — Database Down](#3-database-down) |
+| Browser shows certificate error or site unreachable | TLS / DNS issue | [§4 — TLS Issue](#4-tls--https-issue) |
+| Suspected unauthorised access or leaked secret | Security breach | [§5 — Breach](#5-suspected-breach--leaked-secret) |
 
 ---
 
-## 1. API container down
+## 1. API completely down
 
-### Detection
+**Symptom:** All API requests return 5xx or time out. Health check `GET /health` fails or returns no response.
 
-- UptimeRobot alert on `/health` failing for ≥ 5 minutes.
-- Browser shows `502 Bad Gateway`.
-- `docker compose -f docker-compose.prod.yml ps` shows `mindspace-api` as `Exit (...)` or `unhealthy`.
+**Step 1 — Check Railway service status**
+Open [railway.app](https://railway.app) → MindSpace project → **Backend** service.
+- Expected status: **Deployed** (green).
+- If status is **Failed** or **Crashed** → go to Step 2.
 
-### Diagnosis
+**Step 2 — Read the deployment logs**
+Railway dashboard → Backend → **Deployments** → latest → **View logs**.
 
+Look for:
+- `"JWT_SECRET must be at least 32 characters"` → fix in Railway → Backend → Variables, then redeploy.
+- `"ECONNREFUSED"` on database host → MySQL service is down — see §3.
+- `"Cannot find module"` or npm errors → build failed; check build logs.
+
+**Step 3 — Redeploy**
+Railway dashboard → Backend → **Deployments** → **Redeploy** (latest).
+Wait ~60 seconds, then verify:
 ```bash
-docker compose -f docker-compose.prod.yml logs --tail 200 server
-# Look for: uncaught exception, out-of-memory, connection refused
+curl -f https://desirable-enchantment-production-7b63.up.railway.app/health
 ```
 
-### Recovery
-
-```bash
-# Plain restart — fixes most transient failures
-docker compose -f docker-compose.prod.yml restart server
-
-# If that doesn't help, rebuild the image
-docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build server
-
-# Verify
-curl -s http://127.0.0.1:3000/health
+**Step 4 — Verify all required environment variables are set**
+Railway dashboard → Backend → **Variables**. Confirm all of the following are present:
+```
+JWT_SECRET, REFRESH_SECRET, DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME,
+CLIENT_URL, CLIENT_URL_ALT, NODE_ENV=production
 ```
 
-If the API still won't start, roll back to the previous tag (see deployment guide §5) and open an incident ticket.
+**Step 5 — Rollback**
+Railway dashboard → Backend → Deployments → find last green deployment → three-dot menu → **Rollback**.
+
+**Step 6 — Escalate**
+If not resolved within 20 minutes, raise a GitHub issue tagged `[P1-INCIDENT]` and notify all team members.
 
 ---
 
-## 2. API slow or overloaded
+## 2. Slow API
 
-### Detection
+**Symptom:** API responds but slowly. `/health` returns 200 but `POST /api/auth/login` takes > 2 s.
 
-- p95 latency > 2 s sustained.
-- 504 responses from Nginx.
-
-### Diagnosis
-
+**Step 1 — Baseline the latency**
 ```bash
-# Active connections to the API
-docker exec mindspace-api ss -tan | grep :3000 | wc -l
-
-# Slow queries on the DB
-docker exec -it mindspace-db mysql -uroot -p"$DB_ROOT_PASSWORD" -e \
-  "SHOW FULL PROCESSLIST;" mental_health_app
-
-# CPU / memory pressure on the host
-top -bn1 | head -20
-docker stats --no-stream
+time curl -s -o /dev/null https://desirable-enchantment-production-7b63.up.railway.app/health
 ```
+If < 200 ms: network is fine; issue is application-level.
 
-### Recovery
+**Step 2 — Check Railway metrics**
+Railway dashboard → Backend → **Metrics** tab.
+- CPU consistently > 80% → possible tight loop; redeploy to reset the process.
+- Memory steadily growing → possible memory leak; redeploy to reset, then raise a task to investigate.
 
-- If a runaway query: `KILL <id>` from the MySQL prompt.
-- If memory pressure: temporarily scale the API: `docker compose -f docker-compose.prod.yml up -d --scale server=2` (requires an upstream load balancer; for a single-host install this is a stop-gap).
-- If a malicious traffic spike: tighten the rate limit in `Server/src/app.js` and redeploy, or add Cloudflare in front.
+**Step 3 — Check for rate-limit spam**
+Railway dashboard → Backend → **Logs**. Search for `"Too Many Requests"`.
+If frequent: a client is hammering the auth endpoint. Consider temporarily tightening the rate limit in `Server/src/app.js`, commit, and let Railway auto-deploy.
+
+**Step 4 — Redeploy**
+Railway dashboard → Backend → **Redeploy**. Monitor Metrics for 10 minutes after restart.
 
 ---
 
 ## 3. Database down
 
-### Detection
+**Symptom:** API returns 500 with connection timeout errors. Railway shows the MySQL service as **Failed** or **Crashed**.
 
-- API logs show `Error: connect ECONNREFUSED db:3306`.
-- `docker compose -f docker-compose.prod.yml ps` shows `mindspace-db` not running or `unhealthy`.
+**Step 1 — Check the MySQL service**
+Railway dashboard → MindSpace project → **Database** service.
+- If status is **Failed**: open Deployments → View logs.
 
-### Diagnosis
+**Step 2 — Read MySQL logs**
+- `"Out of disk space"` → upgrade the Railway volume in Settings.
+- Repeated crash loops → verify `MYSQL_ROOT_PASSWORD` and `MYSQL_DATABASE` variables are set on the service.
+
+**Step 3 — Restart the MySQL service**
+Railway dashboard → Database → **Redeploy**.
+Wait 60 seconds for InnoDB recovery. Then redeploy the Backend to clear its connection pool.
+
+**Step 4 — Restore from backup (DATA-LOSS RISK)**
 
 ```bash
-docker compose -f docker-compose.prod.yml logs --tail 200 db
-# Common causes: disk full, corrupted volume, OOM-killed
-df -h /var/lib/docker
+# Enable the public MySQL endpoint temporarily in Railway dashboard:
+# Database → Settings → Enable Public Networking
+
+mysql -h <RAILWAY_MYSQL_HOST> -P <RAILWAY_MYSQL_PORT> \
+  -u <DB_USER> -p<DB_PASSWORD> mental_health_app \
+  < mindspace-YYYY-MM-DD.sql
 ```
 
-### Recovery
+After restore, disable the public endpoint and redeploy the Backend.
+Document the data-loss window in a GitHub incident report.
 
-```bash
-# Restart
-docker compose -f docker-compose.prod.yml restart db
-
-# If the data volume is corrupt — restore from last night's backup
-docker compose -f docker-compose.prod.yml down
-docker volume rm mindspace_db_data
-docker compose -f docker-compose.prod.yml --env-file .env.prod up -d db
-# Wait for db to be healthy, then load the dump:
-gunzip -c /home/deploy/backups/mindspace-$(date +%Y%m%d -d yesterday).sql.gz | \
-  docker exec -i mindspace-db mysql -uroot -p"$DB_ROOT_PASSWORD" mental_health_app
-docker compose -f docker-compose.prod.yml --env-file .env.prod up -d server
-```
-
-**Communicate to users:** if data was lost, post a status update on the wellbeing intranet page. GDPR Art. 33 may require notifying the ICO within 72 hours if personal data was affected.
+> **Backup note:** Railway does not provide automatic MySQL backups. Manual dumps must be taken before significant deployments (see `docs/deployment.md` §6).
 
 ---
 
-## 4. TLS or certificate issue
+## 4. TLS / HTTPS issue
 
-### Detection
+**Symptom:** Browser shows a certificate error or the site is unreachable via HTTPS.
 
-- Browser shows "Your connection is not private" / `NET::ERR_CERT_DATE_INVALID`.
+> Railway manages TLS certificates automatically — they renew without manual intervention. Most TLS issues are DNS-related.
 
-### Diagnosis
-
+**Step 1 — Check DNS**
+Verify the CNAME for `mindspace.lucamartinet.dev` points to the Railway URL.
 ```bash
-sudo certbot certificates                   # show expiry dates
-sudo systemctl status certbot.timer         # confirm renewal timer is active
-sudo journalctl -u certbot.timer --since "30 days ago"
+dig mindspace.lucamartinet.dev CNAME
 ```
 
-### Recovery
+**Step 2 — Check Railway certificate status**
+Railway dashboard → Frontend → Settings → **Custom Domains**.
+- If domain shows **"Certificate Pending"**: wait up to 10 minutes and refresh.
+- If domain shows an error: remove and re-add the domain, then re-add the CNAME at your DNS provider.
 
-```bash
-sudo certbot renew --force-renewal
-sudo systemctl reload nginx
-```
+**Step 3 — Custom domain broken but Railway URL works**
+If `https://mindspace.lucamartinet.dev` is broken but `https://<random>.up.railway.app` works:
+the CNAME record has been removed or changed. Re-add it at your DNS provider.
 
-If renewal fails because port 80 is unreachable: confirm DNS `A` record points to the server and that UFW allows port 80.
+**Step 4 — Escalate**
+If unresolved after 30 minutes, raise a GitHub issue tagged `[P2-TLS]` and check [status.railway.app](https://status.railway.app).
 
 ---
 
-## 5. Suspected breach or leaked secret
+## 5. Suspected breach / leaked secret
 
-If `JWT_SECRET`, `REFRESH_SECRET`, or any DB credential is leaked (e.g. accidentally committed, posted in a PR, copied into a screenshot):
+**Symptom:** Unusual admin activity in `audit_log`; unexpected data requests; accounts accessed without owner's knowledge; `JWT_SECRET`, `REFRESH_SECRET`, or database credentials found in a public location.
 
-### Immediate (within 1 hour)
+### Immediate actions (first 15 minutes)
 
-1. **Rotate the secret.** Generate a new value:
-   ```bash
-   node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-   ```
-2. Update `.env.prod` on the server with the new secret.
-3. Restart the API: `docker compose -f docker-compose.prod.yml restart server`.
-   - This invalidates **every** existing access and refresh token — all users are logged out. This is the intended behaviour.
-4. Force-rotate DB passwords: `ALTER USER 'mindspace_app'@'%' IDENTIFIED BY '<new>';` and update `.env.prod`.
-5. Audit `audit_log` for suspicious admin actions in the leak window.
+**Step 1 — Disable the Backend**
+Railway dashboard → Backend → Settings → **Disable service**.
+This stops all API traffic immediately.
 
-### Within 24 hours
+**Step 2 — Rotate JWT secrets**
+Railway dashboard → Backend → **Variables**.
+Replace `JWT_SECRET` and `REFRESH_SECRET` with new 64-character random strings:
+```bash
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
+Save and redeploy. All previously issued JWTs are immediately invalid — all users are logged out. This is the intended behaviour.
 
-6. Determine scope: was data accessed? Use server logs and `audit_log`.
-7. If personal data was accessed by an unauthorised party: the DPO must notify the ICO within 72 hours per GDPR Art. 33.
-8. If individual users were affected: notify them per GDPR Art. 34.
-9. Open a post-mortem: timeline, root cause, prevention.
+**Step 3 — Rotate database credentials**
+Railway dashboard → Database → **Variables**. Generate new passwords for `MYSQL_ROOT_PASSWORD` and `MYSQL_PASSWORD`.
+Update the matching `DB_PASSWORD` variable on the Backend service.
+Redeploy both services.
 
-### Within 1 week
+**Step 4 — Export logs before any restart**
+Copy Railway deployment logs for Backend and Database.
+Export relevant `audit_log` rows before the DB is restarted:
 
-10. Apply preventative controls: secret-scanning pre-commit hook (`gitleaks`), restrict who can read `.env.prod`, mandatory PR review for any change that touches secrets-handling code.
+```bash
+# Via Railway public endpoint (enable temporarily):
+mysql -h <HOST> -P <PORT> -u <USER> -p<PASS> mental_health_app \
+  -e "SELECT * FROM audit_log WHERE created_at > NOW() - INTERVAL 24 HOUR ORDER BY created_at DESC;"
+```
+
+**Step 5 — Identify affected accounts**
+Cross-reference `audit_log` with Railway activity logs (dashboard → Activity).
+Note the window of compromise and affected user accounts.
+
+**Step 6 — Notify affected users**
+Email affected users within 72 hours (GDPR Article 33/34).
+File a GitHub incident report. If PII of EU data subjects was involved, notify the ICO within 72 hours.
+
+**Step 7 — Re-enable the Backend**
+Railway dashboard → Backend → **Redeploy** (with new secrets in place).
+Verify `/health` returns 200 before announcing recovery.
 
 ---
 
-## Useful one-liners
+## Useful commands
 
 ```bash
-# Tail all logs in real time
-docker compose -f docker-compose.prod.yml logs -f
+# Verify live health
+curl https://desirable-enchantment-production-7b63.up.railway.app/health
 
-# Container resource usage
-docker stats --no-stream
+# Check specific API endpoint
+curl -s https://desirable-enchantment-production-7b63.up.railway.app/api/auth/login \
+  -X POST -H "Content-Type: application/json" \
+  -d '{"email":"test@test.com","password":"wrong"}' | jq .
 
-# Disk usage (Docker volumes)
-docker system df
+# Connect to MySQL (requires public endpoint enabled in Railway dashboard)
+mysql -h <RAILWAY_HOST> -P <RAILWAY_PORT> -u <DB_USER> -p<DB_PASSWORD> mental_health_app
 
-# Free space on host
-df -h
+# View last 50 audit log entries (via MySQL connection above)
+SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 50;
 
-# Open a MySQL prompt as root
-docker exec -it mindspace-db mysql -uroot -p"$DB_ROOT_PASSWORD" mental_health_app
-
-# Show last 50 audit-log entries
-docker exec -i mindspace-db mysql -uroot -p"$DB_ROOT_PASSWORD" -D mental_health_app \
-  -e "SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 50;"
-
-# Tail Nginx access log
-sudo tail -f /var/log/nginx/access.log
+# View recent bookings
+SELECT b.id, u.email, b.status, b.created_at
+FROM bookings b JOIN users u ON b.user_id = u.id
+ORDER BY b.created_at DESC LIMIT 20;
 ```
 
 ---
 
 ## Escalation contacts
 
-| Severity | Person | Contact |
-|----------|--------|---------|
-| P1 — site down or breach | Project lead | (team channel) |
-| P2 — degraded service | On-call dev | (team channel) |
-| P3 — non-blocking | Backlog | GitHub issue |
+| Severity | Description | Action |
+|----------|-------------|--------|
+| P1 — Site down or breach | Complete outage or confirmed security incident | Notify all team members immediately via Discord |
+| P2 — Degraded service | Elevated errors or latency, partial functionality | Raise GitHub issue, investigate within 2 hours |
+| P3 — Non-blocking | Minor issue, no user impact | Raise GitHub issue, address in next sprint |

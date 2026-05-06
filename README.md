@@ -2,6 +2,9 @@
 
 A full-stack web application providing personalised mental health support for Cardiff Met students, built as part of SEN5002 Agile Development and DevOps.
 
+**Live app:** https://mindspace.lucamartinet.dev
+**API / Swagger:** https://desirable-enchantment-production-7b63.up.railway.app/api-docs/
+
 [![Code Quality Checks](https://github.com/Cardiff-Met/MentalHealthApp/actions/workflows/code-quality.yml/badge.svg)](https://github.com/Cardiff-Met/MentalHealthApp/actions)
 [![Docker Build & Test](https://github.com/Cardiff-Met/MentalHealthApp/actions/workflows/docker-test.yml/badge.svg)](https://github.com/Cardiff-Met/MentalHealthApp/actions)
 
@@ -66,6 +69,7 @@ A full-stack web application providing personalised mental health support for Ca
 |-----------|---------|
 | Docker + Docker Compose | Containerisation (dev & prod) |
 | GitHub Actions | CI/CD — lint, format, test, Docker smoke test |
+| Railway | Production hosting — managed MySQL, Backend, and Frontend services |
 
 ---
 
@@ -214,11 +218,11 @@ All functional and integration tests use **supertest** to send real HTTP request
 
 | Control | Implementation |
 |---------|---------------|
-| Password hashing | bcrypt (cost 10) |
+| Password hashing | bcrypt (cost 12) |
 | Access tokens | JWT, 15-min expiry |
 | Refresh tokens | JWT, 7-day expiry, httpOnly + sameSite strict cookies |
 | Security headers | Helmet (CSP, HSTS, X-Frame-Options, etc.) |
-| Rate limiting | 50 req/15 min on `/api/auth/*`; 500 req/15 min global |
+| Rate limiting | 5 req/15 min on `/api/auth/*`; 100 req/15 min global |
 | Body size cap | 100 KB — mitigates payload flooding |
 | Password policy | ≥8 chars, must include letter + digit |
 | JWT secret enforcement | Fails fast if `JWT_SECRET` < 32 chars |
@@ -351,8 +355,8 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 |----------|-------------|
 | [`docs/nfr.md`](./docs/nfr.md) | Non-functional requirements with codebase evidence |
 | [`docs/threat-model.md`](./docs/threat-model.md) | STRIDE threat analysis (23 threats) |
-| [`docs/deployment.md`](./docs/deployment.md) | VPS deployment guide — Nginx, Let's Encrypt, backups |
-| [`docs/runbook.md`](./docs/runbook.md) | Incident response — 5 scenarios with diagnose/recover steps |
+| [`docs/deployment.md`](./docs/deployment.md) | Railway deployment guide — services, env vars, custom domain, backups |
+| [`docs/runbook.md`](./docs/runbook.md) | Incident response — 5 scenarios with diagnose/recover steps (Railway) |
 | [`docs/GithubActions.md`](./docs/GithubActions.md) | CI/CD pipeline documentation |
 | [`docs/sprint02.md`](./docs/sprint02.md) | Sprint 2 summary and retrospective |
 | [`docs/sprint03.md`](./docs/sprint03.md) | Sprint 3 summary and retrospective |
