@@ -99,7 +99,7 @@ JWT_SECRET=<64-hex-char-random-string>
 REFRESH_SECRET=<64-hex-char-random-string>
 ```
 
-> **JWT_SECRET and REFRESH_SECRET must each be at least 32 characters.** The server will refuse to start if either is shorter — this is enforced at boot.
+> **JWT_SECRET must be at least 32 characters.** The server will refuse to start if it is shorter — this is enforced at boot in `app.js`. Although `REFRESH_SECRET` length is not enforced at boot, it should also be ≥ 32 chars in production.
 
 ### Step 4 — Configure the Frontend service
 
@@ -140,7 +140,7 @@ The Backend runs `Server/src/db/migrate.js` on startup, which applies the schema
 - Open `https://mindspace.lucamartinet.dev` — the React SPA loads.
 - Register a test account and log in.
 - Log a mood entry and confirm resources appear.
-- Open `https://desirable-enchantment-production-7b63.up.railway.app/api-docs/` — all 30 endpoints should be visible.
+- Open `https://desirable-enchantment-production-7b63.up.railway.app/api-docs/` — all 35 endpoints should be visible.
 
 ---
 
@@ -245,5 +245,5 @@ Before marking a deployment as production-ready:
 - [ ] Frontend `VITE_API_URL` points to the correct Backend Railway URL.
 - [ ] Custom domain CNAME resolves and Railway shows the certificate as **Active**.
 - [ ] Helmet security headers visible in browser DevTools (`Strict-Transport-Security`, `X-Content-Type-Options`, `X-Frame-Options`).
-- [ ] Swagger UI at `/api-docs/` loads and shows all 30 endpoints.
-- [ ] All 164 server tests + 29 client tests pass in CI before the deploy.
+- [ ] Swagger UI at `/api-docs/` loads and shows all 35 endpoints.
+- [ ] All 164 server tests pass in CI before the deploy.

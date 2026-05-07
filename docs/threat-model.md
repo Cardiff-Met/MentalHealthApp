@@ -57,14 +57,14 @@ Per the brief's expectation of ≥ 12 threats, below is the full STRIDE matrix a
 | # | Category | Threat | Mitigation | Residual |
 |---|----------|--------|------------|----------|
 | A1 | **S**poofing | Attacker forges a JWT to authenticate as another user. | JWT signed with HS256 using ≥ 32-char `JWT_SECRET`; bootstrap fails fast if secret is short/missing (`app.js`). | Low |
-| A2 | **S**poofing | Credential stuffing / brute-force against `/api/auth/login`. | `express-rate-limit` — 5 requests / 15 min per IP on `/api/auth/*`. | **Medium** — distributed botnets can defeat IP-based limits; future work: account lockout + CAPTCHA. |
+| A2 | **S**poofing | Credential stuffing / brute-force against `/api/auth/login`. | `express-rate-limit` — 50 requests / 15 min per IP on `/api/auth/*`. | **Medium** — distributed botnets can defeat IP-based limits; future work: account lockout + CAPTCHA. |
 | A3 | **T**ampering | SQL injection through any user-controlled parameter. | All queries parameterised via `mysql2` placeholders — never string concatenation. Confirmed by code review. | Low |
 | A4 | **T**ampering | Mass-assignment / over-posting (e.g. POST `{role: 'admin'}` to register). | Controllers explicitly destructure expected fields only; the register endpoint never reads `role` from the request body. | Low |
 | A5 | **R**epudiation | An admin denies having changed another user's role or deleted a booking. | `audit_log` table records `user_id`, `action`, `ip`, `user_agent`, `created_at` for sensitive operations. | **Medium** — log is in the same DB it audits; offsite log shipping is out of scope. |
 | A6 | **I**nformation disclosure | Stack traces leak internals on a 500 error. | Global error handler returns generic `"Internal server error"` for status ≥ 500; full stack only in `console.error`. | Low |
 | A7 | **I**nformation disclosure | Detailed error message reveals whether an email exists ("user not found" vs "wrong password"). | Both branches return the same generic `"Invalid credentials"` response. | Low |
 | A8 | **D**oS | Attacker sends very large JSON bodies to exhaust memory. | `express.json({ limit: '100kb' })` rejects oversize payloads with HTTP 413. | Low |
-| A9 | **D**oS | Attacker floods the API with cheap requests. | Global limiter — 100 requests / 15 min per IP. | **Medium** — does not stop a Layer-7 DDoS; production deployment would sit behind Cloudflare / WAF. |
+| A9 | **D**oS | Attacker floods the API with cheap requests. | Global limiter — 500 requests / 15 min per IP. | **Medium** — does not stop a Layer-7 DDoS; production deployment would sit behind Cloudflare / WAF. |
 | A10 | **E**levation of privilege | A student calls an admin-only endpoint and is granted access. | `requireAdmin` / `requireTherapist` middleware re-validates role from the verified JWT — never trusts request body. | Low |
 | A11 | **E**levation of privilege | A user changes another user's password via `PATCH /api/users/me/password`. | Endpoint always operates on the JWT subject (`req.user.id`); never accepts a target user id. Current password is required. | Low |
 
@@ -75,7 +75,7 @@ Per the brief's expectation of ≥ 12 threats, below is the full STRIDE matrix a
 | AU1 | **S**poofing | Refresh token theft via XSS. | Refresh token stored in HTTP-only, SameSite=strict, secure cookie — unreachable from JS. | Low |
 | AU2 | **T**ampering | Replay of an old / leaked access token after logout. | Access tokens are short-lived (15 min); refresh tokens are revoked on logout / password change. | **Medium** — within the 15-min window a leaked access token is usable; rotation on each refresh is in place. |
 | AU3 | **R**epudiation | User claims they did not log in from a particular location. | `audit_log` records IP + user agent on every login. | Low |
-| AU4 | **I**nformation disclosure | Password hashes leak from a DB dump. | `bcrypt` cost factor 10 — brute force is computationally expensive even with the hash. | **Medium** — cost should be raised to 12+ as hardware improves. |
+| AU4 | **I**nformation disclosure | Password hashes leak from a DB dump. | `bcrypt` cost factor 12 — each guess is ~4× slower than cost 10, frustrating offline brute force. | Low |
 | AU5 | **E**levation of privilege | An admin's password reset token is intercepted. | Tokens are stored as SHA-256 hashes in `password_resets`; one-time use; expire after 30 minutes. | Low |
 
 ### 2.4 Database (MySQL 8)
@@ -93,15 +93,14 @@ Per the brief's expectation of ≥ 12 threats, below is the full STRIDE matrix a
 
 - **Total threats catalogued:** 23 (target was ≥ 12)
 - **High residual risk:** 1 (DB backup confidentiality — outside application scope)
-- **Medium residual risk:** 6 (mostly require infrastructure-level controls or advanced anti-abuse)
-- **Low residual risk:** 16
+- **Medium residual risk:** 5 (mostly require infrastructure-level controls or advanced anti-abuse)
+- **Low residual risk:** 17
 
 ### Priority follow-up actions
 
 1. Move access tokens from `localStorage` to in-memory only + secure cookie pattern (closes C1).
 2. Add account lockout after N failed logins to harden against distributed brute-force (closes A2).
-3. Bump bcrypt cost factor to 12 once average login latency budget allows (closes AU4).
-4. Document and automate encrypted DB backups in the deployment guide (closes D3).
+3. Document and automate encrypted DB backups in the deployment guide (closes D3).
 
 ---
 
