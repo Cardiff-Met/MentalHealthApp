@@ -44,7 +44,7 @@ This document captures the non-functional requirements (NFRs) that constrain how
 | **SEC-1** | Passwords never stored in plain text | `bcrypt` with cost factor 12 in `authController.js`. |
 | **SEC-2** | All authenticated endpoints require a valid JWT | `requireAuth` middleware on every protected route. |
 | **SEC-3** | Refresh tokens are HTTP-only, SameSite, secure cookies | Cookie flags set in `authController.js` login response. |
-| **SEC-4** | Brute-force resistance on auth endpoints | `express-rate-limit` — 5 requests / 15 min on `/api/auth/*`. |
+| **SEC-4** | Brute-force resistance on auth endpoints | `express-rate-limit` — 50 requests / 15 min on `/api/auth/*`; 500 requests / 15 min global. |
 | **SEC-5** | OWASP-recommended security headers | `helmet()` enabled globally. |
 | **SEC-6** | SQL injection prevention | All queries use parameterised statements (`mysql2` placeholders). |
 | **SEC-7** | XSS prevention | React auto-escapes interpolated strings; no `dangerouslySetInnerHTML`. |
@@ -79,7 +79,7 @@ Compliance target: **WCAG 2.1 Level AA**.
 |----|-------------|----------|
 | **MAINT-1** | Lint-clean codebase before merging | ESLint 9 enforced on every PR via GitHub Actions. |
 | **MAINT-2** | Consistent formatting | Prettier `format:check` runs in CI. |
-| **MAINT-3** | Automated test suite executed on every PR | Jest (server) + Vitest (client) — currently 50+ tests. |
+| **MAINT-3** | Automated test suite executed on every PR | Jest (server: 14 suites, 164 tests) + Vitest (client). |
 | **MAINT-4** | Branch protection | All changes flow through reviewed PRs; CI must pass before merge. |
 | **MAINT-5** | Documented API surface | Swagger UI served at `/api-docs`. |
 | **MAINT-6** | Idempotent migration runner | `Server/src/db/migrate.js` checks `information_schema` before each ALTER. |

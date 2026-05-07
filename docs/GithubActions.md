@@ -1,25 +1,25 @@
-# GitHub Actions - Automated Checks
+# GitHub Actions — Automated Checks
 
 ## What's Running
 
-Three GitHub Actions workflows automatically check your code on every push:
+Two workflow files run on every push and pull request, with three jobs in total:
 
-### 1. Code Quality (ESLint)
-- Checks code quality and best practices
-- Runs on both Client and Server
-- Tests on Node 18.x and 20.x
+### Job 1: Lint & Format (`code-quality.yml` → `lint-and-format`)
+- ESLint on Client + Server
+- Prettier format check on Client + Server
+- Matrix: Node 18.x and 20.x
 
-### 2. Code Formatting (Prettier)  
-- Checks code formatting consistency
-- Runs on both Client and Server
-- Tests on Node 18.x and 20.x
+### Job 2: Server Tests (`code-quality.yml` → `test`)
+- Runs after lint-and-format succeeds
+- `npm test -- --coverage` on Server (14 suites, 164 tests)
+- Uploads `lcov-report` as a build artifact (14-day retention)
+- Node 20.x only
 
-### 3. Docker Build & Test
-- Builds Docker images from Dockerfile
-- Starts all containers (MySQL database + Express server)
-- Verifies containers run successfully
-- Tests database connection
-- Tests server health endpoint
+### Job 3: Docker Build & Test (`docker-test.yml`)
+- Builds the production Docker image
+- Starts the full docker-compose stack (API + MySQL)
+- Waits for DB schema initialisation
+- Smoke-tests `/health`, `/api/auth/register`, `/api/auth/login`
 
 ---
 
@@ -141,18 +141,23 @@ You don't need to do anything special - just push your code!
 
 ### code-quality.yml
 
-**What it does:**
-1. Checks out your code
-2. Sets up Node.js (versions 18.x and 20.x)
-3. Installs Server dependencies
-4. Runs `npm run lint` on Server
-5. Runs `npm run format:check` on Server
-6. Installs Client dependencies
-7. Runs `npm run lint` on Client
-8. Runs `npm run format:check` on Client
+Two jobs run sequentially.
 
-**Takes:** ~2-3 minutes  
-**Fails if:** Any lint errors or formatting issues found
+**`lint-and-format` job (Node 18.x + 20.x matrix):**
+1. Checks out the code
+2. Installs Server dependencies + runs `npm run lint` + `npm run format:check`
+3. Installs Client dependencies + runs `npm run lint` + `npm run format:check`
+
+**`test` job (Node 20.x, runs only if lint-and-format passes):**
+1. Checks out the code
+2. Installs Server dependencies
+3. Runs `npm test -- --coverage --coverageReporters=text --coverageReporters=lcov`
+   - Test suite: 14 suites, 164 tests, ~10s
+   - Uses ephemeral CI secrets for `JWT_SECRET` and `REFRESH_SECRET`
+4. Uploads the `lcov-report` directory as a build artifact (14-day retention)
+
+**Takes:** ~3-4 minutes total
+**Fails if:** Any lint errors, formatting issues, or test failures
 
 ### docker-test.yml
 
